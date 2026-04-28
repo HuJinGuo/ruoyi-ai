@@ -11,6 +11,7 @@ import org.ruoyi.common.core.exception.ServiceException;
 import org.ruoyi.config.VectorStoreProperties;
 import org.ruoyi.domain.bo.vector.QueryVectorBo;
 import org.ruoyi.domain.bo.vector.StoreEmbeddingBo;
+import org.ruoyi.domain.vo.knowledge.KnowledgeRetrievalVo;
 import org.ruoyi.factory.EmbeddingModelFactory;
 import org.springframework.stereotype.Component;
 
@@ -152,6 +153,39 @@ public class PgVectorVectorStoreStrategy extends AbstractVectorStoreStrategy {
         } catch (SQLException e) {
             log.error("PgVector查询失败: {}", qualifiedTable, e);
             throw new ServiceException("PgVector向量查询失败");
+        }
+    }
+
+    @Override
+    public List<KnowledgeRetrievalVo> search(QueryVectorBo queryVectorBo) {
+        ensureSchema(queryVectorBo.getKid(), queryVectorBo.getEmbeddingModelName(), false);
+        EmbeddingModel embeddingModel = getEmbeddingModel(queryVectorBo.getEmbeddingModelName());
+        Embedding queryEmbedding = embeddingModel.embed(queryVectorBo.getQuery()).content();
+        String qualifiedTable = qualifiedTableName(queryVectorBo.getKid());
+        String sql = "SELECT content, doc_id, (1 - (embedding <=> CAST(? AS vector))) AS score "
+            + "FROM " + qualifiedTable + " ORDER BY embedding <=> CAST(? AS vector) LIMIT ?";
+
+        List<KnowledgeRetrievalVo> resultList = new ArrayList<>();
+        String queryVector = toPgVectorLiteral(queryEmbedding.vector());
+        try (Connection connection = getDataSource().getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, queryVector);
+            ps.setString(2, queryVector);
+            ps.setInt(3, queryVectorBo.getMaxResults());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    resultList.add(KnowledgeRetrievalVo.builder()
+                        .content(rs.getString("content"))
+                        .docId(rs.getString("doc_id"))
+                        .score(rs.getDouble("score"))
+                        .sourceName("未知来源")
+                        .build());
+                }
+            }
+            return resultList;
+        } catch (SQLException e) {
+            log.error("PgVector检索失败: {}", qualifiedTable, e);
+            throw new ServiceException("PgVector向量检索失败");
         }
     }
 
