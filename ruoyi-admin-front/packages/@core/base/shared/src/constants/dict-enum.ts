@@ -15,6 +15,17 @@ export const DictEnum = {
   WF_TASK_STATUS: 'wf_task_status', // 任务状态
   SYS_MODEL_BILLING: 'sys_model_billing', // 计费方式
   CHAT_MODEL_CATEGORY: 'chat_model_category', // 模型分类
+  CRM_CONTRACT_STATUS: 'crm_contract_status', // CRM合同状态
+  CRM_CUSTOMER_LEVEL: 'crm_customer_level', // CRM客户等级
+  CRM_CUSTOMER_STATUS: 'crm_customer_status', // CRM客户状态
+  CRM_CUSTOMER_TYPE: 'crm_customer_type', // CRM客户类型
+  CRM_DECISION_ROLE: 'crm_decision_role', // CRM决策角色
+  CRM_FOLLOW_METHOD: 'crm_follow_method', // CRM跟进方式
+  CRM_FOLLOW_RESULT: 'crm_follow_result', // CRM跟进结果
+  CRM_OPPORTUNITY_SOURCE: 'crm_opportunity_source', // CRM商机来源
+  CRM_OPPORTUNITY_STAGE: 'crm_opportunity_stage', // CRM商机阶段
+  CRM_PAYMENT_STATUS: 'crm_payment_status', // CRM回款状态
+  CRM_QUOTE_STATUS: 'crm_quote_status', // CRM报价状态
 } as const;
 
 export type DictEnumKey = keyof typeof DictEnum;
