@@ -1,6 +1,7 @@
 package org.ruoyi.system.controller.crm;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaMode;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.ruoyi.common.core.domain.R;
@@ -37,7 +38,13 @@ public class CrmCustomerController extends BaseController {
         return customerService.selectPageList(customer, pageQuery);
     }
 
-    @SaCheckPermission("crm:customer:query")
+    @SaCheckPermission(value = {
+        "crm:customer:query",
+        "crm:contract:list",
+        "crm:contract:query",
+        "crm:contract:add",
+        "crm:contract:edit"
+    }, mode = SaMode.OR)
     @GetMapping("/options")
     public R<List<CrmCustomerVo>> options(CrmCustomerBo customer) {
         return R.ok(customerService.selectList(customer));
