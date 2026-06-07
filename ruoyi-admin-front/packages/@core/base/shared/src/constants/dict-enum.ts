@@ -26,6 +26,17 @@ export const DictEnum = {
   CRM_OPPORTUNITY_STAGE: 'crm_opportunity_stage', // CRM商机阶段
   CRM_PAYMENT_STATUS: 'crm_payment_status', // CRM回款状态
   CRM_QUOTE_STATUS: 'crm_quote_status', // CRM报价状态
+  XTP_ENABLE_STATUS: 'xtp_enable_status', // XTP启停状态
+  XTP_ENGINEERING_MATERIAL_STATUS: 'xtp_engineering_material_status', // XTP工程物料状态
+  XTP_ISSUE_STATUS: 'xtp_issue_status', // XTP发料状态
+  XTP_MATERIAL_CATEGORY: 'xtp_material_category', // XTP物料分类
+  XTP_PURCHASE_ORDER_STATUS: 'xtp_purchase_order_status', // XTP采购订单状态
+  XTP_PURCHASE_REQUEST_STATUS: 'xtp_purchase_request_status', // XTP采购需求状态
+  XTP_RECEIPT_STATUS: 'xtp_receipt_status', // XTP收料状态
+  XTP_STAGE_STATUS: 'xtp_stage_status', // XTP阶段状态
+  XTP_SUPPLIER_LEVEL: 'xtp_supplier_level', // XTP供应商等级
+  XTP_SUPPLIER_STATUS: 'xtp_supplier_status', // XTP供应商状态
+  XTP_WORK_ORDER_STATUS: 'xtp_work_order_status', // XTP工单状态
 } as const;
 
 export type DictEnumKey = keyof typeof DictEnum;
