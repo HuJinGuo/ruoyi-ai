@@ -8,10 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.ruoyi.common.chat.domain.dto.request.ChatRequest;
 import org.ruoyi.common.chat.domain.vo.chat.ChatModelVo;
 import org.ruoyi.enums.ChatModeType;
-import org.ruoyi.observability.ChatModelListenerProvider;
 import org.ruoyi.observability.MyChatModelListener;
 import org.ruoyi.service.chat.AbstractChatService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -29,6 +29,7 @@ public class OpenAIServiceImpl implements AbstractChatService {
 
     @Override
     public StreamingChatModel buildStreamingChatModel(ChatModelVo chatModelVo,ChatRequest chatRequest) {
+        validateModelName(chatModelVo.getModelName());
         return OpenAiStreamingChatModel.builder()
                 .baseUrl(chatModelVo.getApiHost())
                 .apiKey(chatModelVo.getApiKey())
@@ -41,6 +42,13 @@ public class OpenAIServiceImpl implements AbstractChatService {
     @Override
     public String getProviderName() {
         return ChatModeType.OPEN_AI.getCode();
+    }
+
+    private void validateModelName(String modelName) {
+        if (!StringUtils.hasText(modelName)) {
+            throw new IllegalArgumentException("OpenAI模型名称不能为空");
+        }
+//
     }
 
 }

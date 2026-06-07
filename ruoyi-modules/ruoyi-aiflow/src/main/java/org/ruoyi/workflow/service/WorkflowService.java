@@ -27,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
+
 @Slf4j
 @Service
 public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
@@ -52,8 +54,8 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         one.setTitle(title);
         one.setUserId(ThreadContext.getCurrentUserId());
         one.setRemark(remark);
-        one.setIsEnable(true);
-        one.setIsPublic(isPublic);
+        one.setIsEnable(FLAG_TRUE);
+        one.setIsPublic(booleanToFlag(isPublic));
         baseMapper.insert(one);
 
         workflowNodeService.createStartNode(one);
@@ -64,7 +66,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         Workflow workflow = PrivilegeUtil.checkAndGetByUuid(wfUuid, this.query(), ErrorEnum.A_WF_NOT_FOUND);
         ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(Workflow::getId, workflow.getId())
-                .set(Workflow::getIsPublic, isPublic)
+                .set(Workflow::getIsPublic, booleanToFlag(isPublic))
                 .update();
     }
 
@@ -77,7 +79,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
                 .eq(!ThreadContext.getCurrentUser().getIsAdmin(), Workflow::getUserId, ThreadContext.getCurrentUserId())
                 .set(Workflow::getTitle, title)
                 .set(Workflow::getRemark, remark)
-                .set(null != isPublic, Workflow::getIsPublic, isPublic)
+                .set(null != isPublic, Workflow::getIsPublic, booleanToFlag(isPublic))
                 .update();
         Workflow workflow = getOrThrow(wfUuid);
         return changeWorkflowToDTO(workflow);
@@ -113,9 +115,9 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     public WorkflowResp getPublicDetail(String uuid) {
         Workflow workflow = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(Workflow::getUuid, uuid)
-                .eq(Workflow::getIsDeleted, false)
-                .eq(Workflow::getIsPublic, true)
-                .eq(Workflow::getIsEnable, true)
+                .eq(Workflow::getIsDeleted, FLAG_FALSE)
+                .eq(Workflow::getIsPublic, FLAG_TRUE)
+                .eq(Workflow::getIsEnable, FLAG_TRUE)
                 .last("limit 1")
                 .one();
         if (null == workflow) {
@@ -127,7 +129,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     public Workflow getByUuid(String uuid) {
         return ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(Workflow::getUuid, uuid)
-                .eq(Workflow::getIsDeleted, false)
+                .eq(Workflow::getIsDeleted, FLAG_FALSE)
                 .last("limit 1")
                 .one();
     }
@@ -135,7 +137,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     public Workflow getOrThrow(String uuid) {
         Workflow workflow = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(Workflow::getUuid, uuid)
-                .eq(Workflow::getIsDeleted, false)
+                .eq(Workflow::getIsDeleted, FLAG_FALSE)
                 .last("limit 1")
                 .one();
         if (null == workflow) {
@@ -147,9 +149,9 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     public Page<WorkflowResp> search(String keyword, Boolean isPublic, Boolean isEnable, Integer currentPage, Integer pageSize) {
         User user = ThreadContext.getCurrentUser();
         Page<Workflow> page = ChainWrappers.lambdaQueryChain(baseMapper)
-                .eq(Workflow::getIsDeleted, false)
-                .eq(null != isPublic, Workflow::getIsPublic, isPublic)
-                .eq(null != isEnable, Workflow::getIsEnable, isEnable)
+                .eq(Workflow::getIsDeleted, FLAG_FALSE)
+                .eq(null != isPublic, Workflow::getIsPublic, booleanToFlag(isPublic))
+                .eq(null != isEnable, Workflow::getIsEnable, booleanToFlag(isEnable))
                 .like(StringUtils.isNotBlank(keyword), Workflow::getTitle, keyword)
                 .eq(!user.getIsAdmin(), Workflow::getUserId, user.getId())
                 .orderByDesc(Workflow::getUpdateTime)
@@ -167,9 +169,9 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
     public Page<WorkflowResp> searchPublic(String keyword, Integer currentPage, Integer pageSize) {
         Page<Workflow> page = ChainWrappers.lambdaQueryChain(baseMapper)
-                .eq(Workflow::getIsDeleted, false)
-                .eq(Workflow::getIsPublic, true)
-                .eq(Workflow::getIsEnable, true)
+                .eq(Workflow::getIsDeleted, FLAG_FALSE)
+                .eq(Workflow::getIsPublic, FLAG_TRUE)
+                .eq(Workflow::getIsEnable, FLAG_TRUE)
                 .like(StringUtils.isNotBlank(keyword), Workflow::getTitle, keyword)
                 .orderByDesc(Workflow::getUpdateTime)
                 .page(new Page<>(currentPage, pageSize));
@@ -186,8 +188,8 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
     public Page<WorkflowResp> search(String keyword, Integer currentPage, Integer pageSize) {
         Page<Workflow> page = ChainWrappers.lambdaQueryChain(baseMapper)
-                .eq(Workflow::getIsDeleted, false)
-                .eq(Workflow::getIsEnable, true)
+                .eq(Workflow::getIsDeleted, FLAG_FALSE)
+                .eq(Workflow::getIsEnable, FLAG_TRUE)
                 .like(StringUtils.isNotBlank(keyword), Workflow::getTitle, keyword)
                 .orderByDesc(Workflow::getUpdateTime)
                 .page(new Page<>(currentPage, pageSize));
@@ -203,7 +205,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
     public void softDelete(String uuid) {
         ChainWrappers.lambdaUpdateChain(baseMapper).eq(Workflow::getUuid, uuid)
-                .set(Workflow::getIsDeleted, true).update();
+                .set(Workflow::getIsDeleted, FLAG_TRUE).update();
     }
 
     public void enable(String uuid, Boolean enable) {
@@ -214,13 +216,14 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(Workflow::getId, workflow.getId())
                 .eq(!ThreadContext.getCurrentUser().getIsAdmin(), Workflow::getUserId, ThreadContext.getCurrentUserId())
-                .set(Workflow::getIsEnable, enable)
+                .set(Workflow::getIsEnable, booleanToFlag(enable))
                 .update();
     }
 
     private WorkflowResp changeWorkflowToDTO(Workflow workflow) {
         WorkflowResp workflowResp = new WorkflowResp();
         BeanUtils.copyProperties(workflow, workflowResp);
+        workflowResp.setIsPublic(flagToBoolean(workflow.getIsPublic()));
 
         fillNodesAndEdges(workflowResp);
 //        User user = userService.getById(workflow.getUserId());

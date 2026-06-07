@@ -115,7 +115,7 @@ public class ThreadContext {
         user.setQuotaByRequestMonthly(0);
         user.setQuotaByImageDaily(0);
         user.setQuotaByImageMonthly(0);
-        user.setIsDeleted(false);
+        user.setIsDeleted(0);
         return user;
     }
 }

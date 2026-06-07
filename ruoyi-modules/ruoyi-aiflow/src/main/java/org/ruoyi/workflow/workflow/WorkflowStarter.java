@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.List;
 
 import static org.ruoyi.common.chat.enums.ErrorEnum.*;
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
 
 @Slf4j
 @Service
@@ -67,7 +68,7 @@ public class WorkflowStarter implements IWorkFlowStarterService {
         if (null == workflow) {
             sseEmitterHelper.sendErrorAndComplete(user.getId(), sseEmitter, A_WF_NOT_FOUND.getInfo());
             return sseEmitter;
-        } else if (Boolean.FALSE.equals(workflow.getIsEnable())) {
+        } else if (!flagToBoolean(workflow.getIsEnable())) {
             sseEmitterHelper.sendErrorAndComplete(user.getId(), sseEmitter, A_WF_DISABLED.getInfo());
             return sseEmitter;
         }
@@ -81,11 +82,11 @@ public class WorkflowStarter implements IWorkFlowStarterService {
         List<WorkflowComponent> components = workflowComponentService.getAllEnable();
         List<WorkflowNode> nodes = workflowNodeService.lambdaQuery()
                 .eq(WorkflowNode::getWorkflowId, workflow.getId())
-                .eq(WorkflowNode::getIsDeleted, false)
+                .eq(WorkflowNode::getIsDeleted, FLAG_FALSE)
                 .list();
         List<WorkflowEdge> edges = workflowEdgeService.lambdaQuery()
                 .eq(WorkflowEdge::getWorkflowId, workflow.getId())
-                .eq(WorkflowEdge::getIsDeleted, false)
+                .eq(WorkflowEdge::getIsDeleted, FLAG_FALSE)
                 .list();
         WorkflowEngine workflowEngine = new WorkflowEngine(workflow,
                 sseEmitterHelper, components, nodes, edges,

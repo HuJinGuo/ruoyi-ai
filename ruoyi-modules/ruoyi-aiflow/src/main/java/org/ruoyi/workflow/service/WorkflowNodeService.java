@@ -29,6 +29,8 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
+
 @Slf4j
 @Service
 public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, WorkflowNode> {
@@ -47,7 +49,7 @@ public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, Workflo
     public List<WfNodeDto> listDtoByWfId(long workflowId) {
         List<WorkflowNode> workflowNodeList = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowNode::getWorkflowId, workflowId)
-                .eq(WorkflowNode::getIsDeleted, false)
+                .eq(WorkflowNode::getIsDeleted, FLAG_FALSE)
                 .list();
         workflowNodeList.forEach(this::checkAndDecrypt);
         return MPPageUtil.convertToList(workflowNodeList, WfNodeDto.class, (source, target) -> {
@@ -61,7 +63,7 @@ public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, Workflo
         WorkflowNode node = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowNode::getWorkflowId, workflowId)
                 .eq(WorkflowNode::getUuid, uuid)
-                .eq(WorkflowNode::getIsDeleted, false)
+                .eq(WorkflowNode::getIsDeleted, FLAG_FALSE)
                 .last("limit 1")
                 .one();
         checkAndDecrypt(node);
@@ -71,7 +73,7 @@ public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, Workflo
     public List<WorkflowNode> listByWorkflowId(Long workflowId) {
         List<WorkflowNode> list = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowNode::getWorkflowId, workflowId)
-                .eq(WorkflowNode::getIsDeleted, false)
+                .eq(WorkflowNode::getIsDeleted, FLAG_FALSE)
                 .list();
         list.forEach(this::checkAndDecrypt);
         return list;
@@ -94,7 +96,7 @@ public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, Workflo
         return ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowNode::getWorkflowId, targetWorkflowId)
                 .eq(WorkflowNode::getUuid, newNode.getUuid())
-                .eq(WorkflowNode::getIsDeleted, false)
+                .eq(WorkflowNode::getIsDeleted, FLAG_FALSE)
                 .last("limit 1")
                 .one();
     }
@@ -123,7 +125,7 @@ public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, Workflo
         ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(WorkflowNode::getWorkflowId, workflowId)
                 .notIn(CollUtil.isNotEmpty(uuidList), WorkflowNode::getUuid, uuidList)
-                .set(WorkflowNode::getIsDeleted, true)
+                .set(WorkflowNode::getIsDeleted, FLAG_TRUE)
                 .update();
     }
 
@@ -198,7 +200,7 @@ public class WorkflowNodeService extends ServiceImpl<WorkflowNodeMapper, Workflo
             ChainWrappers.lambdaUpdateChain(baseMapper)
                     .eq(WorkflowNode::getWorkflowId, workflowId)
                     .eq(WorkflowNode::getUuid, uuid)
-                    .set(WorkflowNode::getIsDeleted, true)
+                    .set(WorkflowNode::getIsDeleted, FLAG_TRUE)
                     .update();
         }
 

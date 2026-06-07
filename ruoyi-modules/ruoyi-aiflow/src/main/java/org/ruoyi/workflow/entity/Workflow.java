@@ -31,8 +31,8 @@ public class Workflow extends BaseEntity {
     private Long userId;
 
     @TableField("is_public")
-    private Boolean isPublic;
+    private Integer isPublic;
 
     @TableField("is_enable")
-    private Boolean isEnable;
+    private Integer isEnable;
 }

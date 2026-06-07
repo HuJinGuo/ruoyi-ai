@@ -34,5 +34,5 @@ public class WorkflowComponent extends BaseEntity {
     private Integer displayOrder;
 
     @TableField("is_enable")
-    private Boolean isEnable;
+    private Integer isEnable;
 }

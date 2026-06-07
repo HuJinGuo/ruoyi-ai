@@ -160,8 +160,15 @@ public class ChatServiceFacade implements IChatService {
 
 
         // 5. 发起对话
-        StreamingChatModel streamingChatModel = chatService.buildStreamingChatModel(chatModelVo, chatRequest);
-        streamingChatModel.chat(contextMessages, handler);
+        try {
+            StreamingChatModel streamingChatModel = chatService.buildStreamingChatModel(chatModelVo, chatRequest);
+            streamingChatModel.chat(contextMessages, handler);
+        } catch (Exception e) {
+            String errorMessage = resolveErrorMessage(e);
+            SseMessageUtils.sendError(userId, errorMessage);
+            SseMessageUtils.completeConnection(userId, tokenValue);
+            log.error("流式响应启动失败: {}", errorMessage, e);
+        }
         return emitter;
     }
 
@@ -551,8 +558,10 @@ public class ChatServiceFacade implements IChatService {
             @Override
             public void onError(Throwable error) {
                 // 发送错误事件
-                SseMessageUtils.sendError(userId, error.getMessage());
-                log.error("流式响应错误: {}", error.getMessage());
+                String errorMessage = resolveErrorMessage(error);
+                SseMessageUtils.sendError(userId, errorMessage);
+                SseMessageUtils.completeConnection(userId, tokenValue);
+                log.error("流式响应错误: {}", errorMessage, error);
             }
         };
     }
@@ -607,8 +616,10 @@ public class ChatServiceFacade implements IChatService {
             @Override
             public void onError(Throwable error) {
                 // 发送错误事件
-                SseMessageUtils.sendError(userId, error.getMessage());
-                log.error("流式响应错误: {}", error.getMessage(), error);
+                String errorMessage = resolveErrorMessage(error);
+                SseMessageUtils.sendError(userId, errorMessage);
+                SseMessageUtils.completeConnection(userId, tokenValue);
+                log.error("流式响应错误: {}", errorMessage, error);
 
                 // 转发给外部 handler
                 if (externalHandler != null) {
@@ -616,6 +627,17 @@ public class ChatServiceFacade implements IChatService {
                 }
             }
         };
+    }
+
+    private String resolveErrorMessage(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (StringUtils.isNotBlank(current.getMessage())) {
+                return current.getMessage();
+            }
+            current = current.getCause();
+        }
+        return "模型调用失败，请检查模型名称、API Key、接口地址和账号权限";
     }
 }
 

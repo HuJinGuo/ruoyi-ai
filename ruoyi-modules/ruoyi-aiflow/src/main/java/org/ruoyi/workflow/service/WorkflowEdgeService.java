@@ -21,6 +21,8 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
+
 @Slf4j
 @Service
 public class WorkflowEdgeService extends ServiceImpl<WorkflowEdgeMapper, WorkflowEdge> {
@@ -32,7 +34,7 @@ public class WorkflowEdgeService extends ServiceImpl<WorkflowEdgeMapper, Workflo
     public List<WfEdgeReq> listDtoByWfId(long workflowId) {
         List<WorkflowEdge> edges = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowEdge::getWorkflowId, workflowId)
-                .eq(WorkflowEdge::getIsDeleted, false)
+                .eq(WorkflowEdge::getIsDeleted, FLAG_FALSE)
                 .list();
         return MPPageUtil.convertToList(edges, WfEdgeReq.class);
     }
@@ -61,14 +63,14 @@ public class WorkflowEdgeService extends ServiceImpl<WorkflowEdgeMapper, Workflo
         ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(WorkflowEdge::getWorkflowId, workflowId)
                 .notIn(CollUtil.isNotEmpty(uuidList), WorkflowEdge::getUuid, uuidList)
-                .set(WorkflowEdge::getIsDeleted, true)
+                .set(WorkflowEdge::getIsDeleted, FLAG_TRUE)
                 .update();
     }
 
     public List<WorkflowEdge> listByWorkflowId(Long workflowId) {
         return ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowEdge::getWorkflowId, workflowId)
-                .eq(WorkflowEdge::getIsDeleted, false)
+                .eq(WorkflowEdge::getIsDeleted, FLAG_FALSE)
                 .list();
     }
 
@@ -103,7 +105,7 @@ public class WorkflowEdgeService extends ServiceImpl<WorkflowEdgeMapper, Workflo
             ChainWrappers.lambdaUpdateChain(baseMapper)
                     .eq(WorkflowEdge::getWorkflowId, workflowId)
                     .eq(WorkflowEdge::getUuid, uuid)
-                    .set(WorkflowEdge::getIsDeleted, true)
+                    .set(WorkflowEdge::getIsDeleted, FLAG_TRUE)
                     .update();
         }
     }
@@ -111,7 +113,7 @@ public class WorkflowEdgeService extends ServiceImpl<WorkflowEdgeMapper, Workflo
     public WorkflowEdge getByUuid(String uuid) {
         return ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowEdge::getUuid, uuid)
-                .eq(WorkflowEdge::getIsDeleted, false)
+                .eq(WorkflowEdge::getIsDeleted, FLAG_FALSE)
                 .last("limit 1")
                 .one();
     }

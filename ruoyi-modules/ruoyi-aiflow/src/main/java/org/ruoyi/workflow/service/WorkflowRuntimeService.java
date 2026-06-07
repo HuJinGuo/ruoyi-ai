@@ -28,6 +28,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 
 import static org.ruoyi.workflow.cosntant.AdiConstant.WorkflowConstant.WORKFLOW_PROCESS_STATUS_DOING;
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
 
 @Slf4j
 @Service
@@ -106,7 +107,7 @@ public class WorkflowRuntimeService extends ServiceImpl<WorkflowRunMapper, Workf
         return ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(!ThreadContext.getCurrentUser().getIsAdmin(), WorkflowRuntime::getUserId, ThreadContext.getCurrentUserId())
                 .eq(WorkflowRuntime::getUuid, uuid)
-                .eq(WorkflowRuntime::getIsDeleted, false)
+                .eq(WorkflowRuntime::getIsDeleted, FLAG_FALSE)
                 .last("limit 1")
                 .one();
     }
@@ -116,7 +117,7 @@ public class WorkflowRuntimeService extends ServiceImpl<WorkflowRunMapper, Workf
         User user = ThreadContext.getCurrentUser();
         Page<WorkflowRuntime> page = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(WorkflowRuntime::getWorkflowId, workflow.getId())
-                .eq(WorkflowRuntime::getIsDeleted, false)
+                .eq(WorkflowRuntime::getIsDeleted, FLAG_FALSE)
                 .eq(!user.getIsAdmin(), WorkflowRuntime::getUserId, user.getId())
                 .orderByDesc(WorkflowRuntime::getUpdateTime)
                 .page(new Page<>(currentPage, pageSize));
@@ -139,7 +140,7 @@ public class WorkflowRuntimeService extends ServiceImpl<WorkflowRunMapper, Workf
         return ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(WorkflowRuntime::getWorkflowId, workflow.getId())
                 .eq(!user.getIsAdmin(), WorkflowRuntime::getUserId, user.getId())
-                .set(WorkflowRuntime::getIsDeleted, true)
+                .set(WorkflowRuntime::getIsDeleted, FLAG_TRUE)
                 .update();
     }
 
@@ -168,7 +169,7 @@ public class WorkflowRuntimeService extends ServiceImpl<WorkflowRunMapper, Workf
         WorkflowRuntime workflowRuntime = PrivilegeUtil.checkAndGetByUuid(uuid, this.query(), ErrorEnum.A_WF_NOT_FOUND);
         return ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(WorkflowRuntime::getId, workflowRuntime.getId())
-                .set(WorkflowRuntime::getIsDeleted, true)
+                .set(WorkflowRuntime::getIsDeleted, FLAG_TRUE)
                 .update();
     }
 }

@@ -156,6 +156,8 @@ public class AdiConstant {
     public static final String URL_PREFIX_MY_THUMBNAIL = "/my-thumbnail/";
     public static final List<String> IMAGE_EXTENSIONS = List.of("jpg", "jpeg", "png", "gif", "bmp", "webp");
     public static final String W_FAILED = "FAILED";
+    public static final int FLAG_FALSE = 0;
+    public static final int FLAG_TRUE = 1;
     public static final String COLUMN_NAME_IS_DELETE = "is_deleted";
     public static final String COLUMN_NAME_USER_ID = "user_id";
     public static final String COLUMN_NAME_ID = "id";
@@ -163,6 +165,14 @@ public class AdiConstant {
     public static final String FORM_DATA_BOUNDARY_PRE = "----WebKitFormBoundary";
 
     private AdiConstant() {
+    }
+
+    public static Integer booleanToFlag(Boolean value) {
+        return Boolean.TRUE.equals(value) ? FLAG_TRUE : FLAG_FALSE;
+    }
+
+    public static Boolean flagToBoolean(Integer value) {
+        return FLAG_TRUE == (value == null ? FLAG_FALSE : value);
     }
 
     public static class ConversationConstant {

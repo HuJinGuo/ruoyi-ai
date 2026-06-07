@@ -18,6 +18,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
+
 @Slf4j
 @Service
 public class WorkflowRuntimeNodeService extends ServiceImpl<WorkflowRuntimeNodeMapper, WorkflowRuntimeNode> {
@@ -27,7 +29,7 @@ public class WorkflowRuntimeNodeService extends ServiceImpl<WorkflowRuntimeNodeM
         List<WorkflowRuntimeNode> workflowNodeList = ChainWrappers.lambdaQueryChain(baseMapper)
                 .eq(!ThreadContext.getCurrentUser().getIsAdmin(), WorkflowRuntimeNode::getUserId, ThreadContext.getCurrentUser().getId())
                 .eq(WorkflowRuntimeNode::getWorkflowRuntimeId, runtimeId)
-                .eq(WorkflowRuntimeNode::getIsDeleted, false)
+                .eq(WorkflowRuntimeNode::getIsDeleted, FLAG_FALSE)
                 .orderByAsc(WorkflowRuntimeNode::getId)
                 .list();
         List<WfRuntimeNodeDto> result = MPPageUtil.convertToList(workflowNodeList, WfRuntimeNodeDto.class);

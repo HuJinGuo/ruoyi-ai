@@ -39,6 +39,7 @@ import java.util.function.Function;
 
 import static org.bsc.langgraph4j.StateGraph.END;
 import static org.ruoyi.workflow.cosntant.AdiConstant.WorkflowConstant.*;
+import static org.ruoyi.workflow.cosntant.AdiConstant.flagToBoolean;
 import static org.ruoyi.common.chat.enums.ErrorEnum.*;
 
 @Slf4j
@@ -80,7 +81,7 @@ public class WorkflowEngine {
         this.user = user;
         this.sseEmitter = sseEmitter;
         log.info("WorkflowEngine run,userId:{},workflowUuid:{},userInputs:{}", user.getId(), workflow.getUuid(), userInputs);
-        if (!this.workflow.getIsEnable()) {
+        if (!flagToBoolean(this.workflow.getIsEnable())) {
             sseEmitterHelper.sendErrorAndComplete(user.getId(), sseEmitter, ErrorEnum.A_WF_DISABLED.getInfo());
             throw new BaseException(ErrorEnum.A_WF_DISABLED.getInfo());
         }

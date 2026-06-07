@@ -27,6 +27,7 @@ import java.util.List;
 import static org.ruoyi.workflow.cosntant.RedisKeyConstant.WORKFLOW_COMPONENTS;
 import static org.ruoyi.workflow.cosntant.RedisKeyConstant.WORKFLOW_COMPONENT_START_KEY;
 import static org.ruoyi.common.chat.enums.ErrorEnum.C_WF_COMPONENT_DELETED_FAIL_BY_USED;
+import static org.ruoyi.workflow.cosntant.AdiConstant.*;
 
 @Slf4j
 @Service
@@ -48,15 +49,16 @@ public class WorkflowComponentService extends ServiceImpl<WorkflowComponentMappe
             update.setName(req.getName());
             update.setTitle(req.getTitle());
             update.setRemark(req.getRemark());
-            update.setIsEnable(req.getIsEnable());
+            update.setIsEnable(booleanToFlag(req.getIsEnable()));
             update.setDisplayOrder(req.getDisplayOrder());
             this.baseMapper.updateById(update);
 
             return update;
         } else {
             wfComponent = new WorkflowComponent();
-            BeanUtils.copyProperties(req, wfComponent, "id", "uuid");
+            BeanUtils.copyProperties(req, wfComponent, "id", "uuid", "isEnable");
             wfComponent.setUuid(UuidUtil.createShort());
+            wfComponent.setIsEnable(booleanToFlag(req.getIsEnable()));
             this.baseMapper.insert(wfComponent);
 
             return wfComponent;
@@ -67,7 +69,7 @@ public class WorkflowComponentService extends ServiceImpl<WorkflowComponentMappe
     public void enable(String uuid, Boolean isEnable) {
         WorkflowComponent wfComponent = PrivilegeUtil.checkAndGetByUuid(uuid, this.query(), ErrorEnum.A_WF_COMPONENT_NOT_FOUND);
         WorkflowComponent update = new WorkflowComponent();
-        update.setIsEnable(isEnable);
+        update.setIsEnable(booleanToFlag(isEnable));
         update.setId(wfComponent.getId());
         this.baseMapper.updateById(update);
     }
@@ -81,8 +83,8 @@ public class WorkflowComponentService extends ServiceImpl<WorkflowComponentMappe
         }
         boolean updated = ChainWrappers.lambdaUpdateChain(baseMapper)
                 .eq(WorkflowComponent::getId, component.getId())
-                .set(WorkflowComponent::getIsDeleted, true)
-                .set(WorkflowComponent::getIsEnable, false)
+                .set(WorkflowComponent::getIsDeleted, FLAG_TRUE)
+                .set(WorkflowComponent::getIsEnable, FLAG_FALSE)
                 .update();
         if (!updated) {
             throw new BaseException(ErrorEnum.A_WF_COMPONENT_NOT_FOUND.getInfo());
@@ -91,8 +93,8 @@ public class WorkflowComponentService extends ServiceImpl<WorkflowComponentMappe
 
     public Page<WorkflowComponent> search(WfComponentSearchReq searchReq, Integer currentPage, Integer pageSize) {
         LambdaQueryWrapper<WorkflowComponent> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WorkflowComponent::getIsDeleted, false);
-        wrapper.eq(null != searchReq.getIsEnable(), WorkflowComponent::getIsEnable, searchReq.getIsEnable());
+        wrapper.eq(WorkflowComponent::getIsDeleted, FLAG_FALSE);
+        wrapper.eq(null != searchReq.getIsEnable(), WorkflowComponent::getIsEnable, booleanToFlag(searchReq.getIsEnable()));
         wrapper.like(StringUtils.isNotBlank(searchReq.getTitle()), WorkflowComponent::getTitle, searchReq.getTitle());
         wrapper.orderByAsc(List.of(WorkflowComponent::getDisplayOrder, WorkflowComponent::getId));
         return baseMapper.selectPage(new Page<>(currentPage, pageSize), wrapper);
@@ -101,8 +103,8 @@ public class WorkflowComponentService extends ServiceImpl<WorkflowComponentMappe
     // @Cacheable(cacheNames = WORKFLOW_COMPONENTS)
     public List<WorkflowComponent> getAllEnable() {
         return ChainWrappers.lambdaQueryChain(baseMapper)
-                .eq(WorkflowComponent::getIsEnable, true)
-                .eq(WorkflowComponent::getIsDeleted, false)
+                .eq(WorkflowComponent::getIsEnable, FLAG_TRUE)
+                .eq(WorkflowComponent::getIsDeleted, FLAG_FALSE)
                 .orderByAsc(List.of(WorkflowComponent::getDisplayOrder, WorkflowComponent::getId))
                 .list();
     }
