@@ -33,9 +33,11 @@ import org.ruoyi.agent.EchartsAgent;
 import org.ruoyi.agent.SkillsAgent;
 import org.ruoyi.agent.SqlAgent;
 import org.ruoyi.agent.WebSearchAgent;
+import org.ruoyi.agent.XtpManufacturingAgent;
 import org.ruoyi.agent.tool.ExecuteSqlQueryTool;
 import org.ruoyi.agent.tool.QueryAllTablesTool;
 import org.ruoyi.agent.tool.QueryTableSchemaTool;
+import org.ruoyi.agent.tool.XtpManufacturingFlowTool;
 import org.ruoyi.common.chat.base.ThreadContext;
 import org.ruoyi.common.chat.domain.dto.request.ChatRequest;
 import org.ruoyi.common.chat.domain.dto.request.ReSumeRunner;
@@ -323,11 +325,18 @@ public class ChatServiceFacade implements IChatService {
             .listener(new MyAgentListener())
             .build();
 
+        // 构建子 Agent 6: XTP 制造闭环 - 负责合同到制造交付的流程动作
+        XtpManufacturingAgent xtpManufacturingAgent = AgenticServices.agentBuilder(XtpManufacturingAgent.class)
+            .chatModel(plannerModel)
+            .tools(new XtpManufacturingFlowTool())
+            .listener(new MyAgentListener())
+            .build();
+
         // 构建监督者 Agent - 管理多个子 Agent
         SupervisorAgent supervisor = AgenticServices.supervisorBuilder()
             .chatModel(plannerModel)
             //.listener(new SupervisorStreamListener(null))
-            .subAgents(skillsAgent,searchAgent, sqlAgent, chartGenerationAgent, echartsAgent)
+            .subAgents(skillsAgent, searchAgent, sqlAgent, chartGenerationAgent, echartsAgent, xtpManufacturingAgent)
             // 加入历史上下文 - 使用 ChatMemoryProvider 提供持久化的聊天内存
             //.chatMemoryProvider(memoryId -> createChatMemory(chatRequest.getSessionId()))
             .responseStrategy(SupervisorResponseStrategy.LAST)
@@ -640,4 +649,3 @@ public class ChatServiceFacade implements IChatService {
         return "模型调用失败，请检查模型名称、API Key、接口地址和账号权限";
     }
 }
-
