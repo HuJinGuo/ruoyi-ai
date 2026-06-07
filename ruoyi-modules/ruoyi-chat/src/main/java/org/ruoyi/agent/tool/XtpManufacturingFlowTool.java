@@ -26,80 +26,80 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
         return SpringUtils.getBean(XtpManufacturingService.class);
     }
 
-    @Tool("Query a CRM contract by contract id for XTP manufacturing flow")
+    @Tool("按合同ID查询 CRM 合同，用于 XTP 制造闭环")
     public String crmContractQuery(Long contractId) {
         return toJson(SpringUtils.getBean(CrmContractMapper.class).selectById(contractId));
     }
 
-    @Tool("Generate an MES work order draft from an executing CRM contract")
+    @Tool("根据 CRM 合同生成 MES 生产工单草稿")
     public String crmContractGenerateWorkOrder(Long contractId, String productName, Integer quantity, Long responsibleUserId) {
         return toJson(flowService().generateWorkOrder(contractId, productName, quantity, responsibleUserId));
     }
 
-    @Tool("Query an MES work order by work order id")
+    @Tool("按工单ID查询 MES 生产工单")
     public String mesWorkOrderQuery(Long workOrderId) {
         return toJson(SpringUtils.getBean(MesWorkOrderMapper.class).selectById(workOrderId));
     }
 
-    @Tool("Update a work order stage status. Status can be WAIT, PROCESSING, FINISHED, or PAUSE")
+    @Tool("更新工单阶段状态，状态可为 WAIT、PROCESSING、FINISHED、PAUSE")
     public String mesWorkOrderStageUpdate(Long workOrderId, String stageCode, String status, String remark) {
         return toJson(flowService().updateStage(workOrderId, stageCode, status, remark));
     }
 
-    @Tool("List stage progress for a work order")
+    @Tool("查询工单阶段进度")
     public String mesWorkOrderStages(Long workOrderId) {
         return toJson(flowService().listStages(workOrderId));
     }
 
-    @Tool("List engineering material rows for a work order")
+    @Tool("查询工单的工程物料清算明细")
     public String engineeringMaterialQuery(Long workOrderId) {
         return toJson(SpringUtils.getBean(EngineeringMaterialMapper.class)
             .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.engineering.EngineeringMaterial>()
                 .eq(org.ruoyi.system.domain.engineering.EngineeringMaterial::getWorkOrderId, workOrderId)));
     }
 
-    @Tool("Check inventory for engineering material rows and calculate shortage quantity")
+    @Tool("对工程物料进行库存检查并计算缺料数量")
     public String engineeringMaterialCheckInventory(Long workOrderId) {
         return toJson(flowService().checkInventory(workOrderId));
     }
 
-    @Tool("Generate purchase request drafts from shortage engineering material rows")
+    @Tool("根据缺料工程物料生成采购需求草稿")
     public String engineeringMaterialGeneratePurchaseRequest(Long workOrderId) {
         return toJson(flowService().generatePurchaseRequests(workOrderId));
     }
 
-    @Tool("Query WMS inventory rows by part id")
+    @Tool("按物料ID查询 WMS 库存")
     public String wmsInventoryQuery(Long partId) {
         return toJson(SpringUtils.getBean(WmsInventoryMapper.class)
             .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.wms.WmsInventory>()
                 .eq(org.ruoyi.system.domain.wms.WmsInventory::getPartId, partId)));
     }
 
-    @Tool("List SRM purchase requests for a work order")
+    @Tool("查询工单对应的 SRM 采购需求")
     public String srmPurchaseRequestQuery(Long workOrderId) {
         return toJson(SpringUtils.getBean(SrmPurchaseRequestMapper.class)
             .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.srm.SrmPurchaseRequest>()
                 .eq(org.ruoyi.system.domain.srm.SrmPurchaseRequest::getWorkOrderId, workOrderId)));
     }
 
-    @Tool("Create a purchase order from one purchase request")
+    @Tool("根据采购需求创建采购订单")
     public String srmPurchaseOrderCreate(Long purchaseRequestId, BigDecimal price) {
         return toJson(flowService().createPurchaseOrder(purchaseRequestId, price, null));
     }
 
-    @Tool("Create a receipt order from one purchase order and increase inventory")
+    @Tool("根据采购订单创建收料单并增加库存")
     public String wmsReceiptCreate(Long purchaseOrderId, Long warehouseUserId) {
         return toJson(flowService().createReceiptOrder(purchaseOrderId, warehouseUserId));
     }
 
-    @Tool("Create an issue order for a work order and decrease inventory")
+    @Tool("根据工单创建发料单并扣减库存")
     public String wmsIssueCreate(Long workOrderId, Long warehouseUserId) {
         return toJson(flowService().createIssueOrder(workOrderId, warehouseUserId));
     }
 
     @Override
     public String getToolName() {
-        return "xtp_manufacturing_flow";
+        return "XTP制造闭环工具";
     }
 
     @Override
@@ -109,7 +109,7 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
 
     @Override
     public String getDescription() {
-        return "XTP V1 contract-driven manufacturing tools: contract query, work order generation, inventory check, purchase request/order, receipt, issue, and stage update.";
+        return "XTP V1 合同驱动制造闭环工具：支持合同查询、生成工单、库存检查、采购需求/采购订单、收料、发料和阶段推进。";
     }
 
     private String toJson(Object value) {
