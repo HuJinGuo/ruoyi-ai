@@ -42,13 +42,21 @@ public class MyMcpClientListener implements McpClientListener {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Long userId;
+    private final String runId;
 
     public MyMcpClientListener(Long userId) {
         this.userId = userId;
+        this.runId = null;
+    }
+
+    public MyMcpClientListener(Long userId, String runId) {
+        this.userId = userId;
+        this.runId = runId;
     }
 
     public MyMcpClientListener() {
         this.userId = null;
+        this.runId = null;
     }
 
     // ==================== 工具执行 ====================
@@ -152,6 +160,9 @@ public class MyMcpClientListener implements McpClientListener {
         }
         try {
             Map<String, Object> content = new HashMap<>();
+            if (runId != null) {
+                content.put("runId", runId);
+            }
             content.put("name", name);
             content.put("status", status);
             content.put("result", result);

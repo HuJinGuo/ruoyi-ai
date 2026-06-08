@@ -1,6 +1,7 @@
 package org.ruoyi.common.sse.utils;
 
 import java.util.Collections;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -143,6 +144,17 @@ public class SseMessageUtils {
      */
     public static void sendError(Long userId, String error) {
         sendEvent(userId, SseEventDto.error(error));
+    }
+
+    /**
+     * 发送 Agent 执行上下文事件。
+     *
+     * @param userId  用户ID
+     * @param event   事件类型
+     * @param payload 结构化负载
+     */
+    public static void sendAgentEvent(Long userId, String event, Map<String, Object> payload) {
+        sendEvent(userId, SseEventDto.agentEvent(event, payload));
     }
 
     /**

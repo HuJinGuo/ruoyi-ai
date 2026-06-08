@@ -8,7 +8,7 @@ import type { ToolCallInfo } from './types';
 import { useHookFetch } from 'hook-fetch/vue';
 import { nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import { send } from '@/api';
+import { send, sendAgent } from '@/api';
 import ChatSender from '@/components/ChatSender/index.vue';
 import { useChatStore } from '@/stores/modules/chat';
 import { useModelStore } from '@/stores/modules/model';
@@ -45,6 +45,8 @@ const inputValue = ref('');
 const chatSenderRef = ref<InstanceType<typeof ChatSender> | null>(null);
 const bubbleItems = ref<MessageItem[]>([]);
 const bubbleListRef = ref<BubbleListInstance | null>(null);
+const executionEvents = ref<ToolCallInfo[]>([]);
+const activeAgentRunId = ref('');
 
 // 工具调用事件计数器（用于生成唯一 key）
 let toolCallKeyCounter = 0;
@@ -58,7 +60,9 @@ const {
   loading: isLoading,
   cancel,
 } = useHookFetch({
-  request: send,
+  request: (data: any) => data?.assistantCode
+    ? sendAgent(data.assistantCode, data)
+    : send(data),
   onError: (err) => {
     console.warn('测试错误拦截', err);
   },
@@ -130,6 +134,8 @@ function handleError(err: any) {
 async function startSSE(chatContent: string) {
   try {
     toolCallKeyCounter = 0;
+    executionEvents.value = [];
+    activeAgentRunId.value = '';
 
     // 添加用户输入的消息
     inputValue.value = '';
@@ -145,11 +151,14 @@ async function startSSE(chatContent: string) {
     // 标记是否收到第一个有效数据 chunk（用于清除 loading 状态）
     let hasReceivedFirstContent = false;
 
+    const useAgentMode = chatSenderRef.value?.isReasoningEnabled || false;
+
     for await (const chunk of stream({
+      assistantCode: useAgentMode ? 'internal-unified' : undefined,
       model: modelStore.currentModelInfo.modelName ?? '',
       content: lastUserMessage?.content ?? '',
       sessionId: route.params?.id !== 'not_login' ? String(route.params?.id) : undefined,
-      enableThinking: chatSenderRef.value?.isReasoningEnabled || false,
+      enableThinking: !useAgentMode && (chatSenderRef.value?.isReasoningEnabled || false),
       knowledgeId: chatStore.knowledgeId || undefined,
     })) {
       // 处理数据块 - chunk.result 可能是字符串或对象
@@ -287,7 +296,10 @@ function parseSseStringEvents(chunk: string) {
 function handleSseEvent(dataObj: AnyObject, rawEventType = ''): boolean {
   const eventType = rawEventType || dataObj.event || '';
 
-  if (eventType === 'mcp' || eventType === 'mcp_tool') {
+  if (eventType.startsWith('agent_')) {
+    handleAgentTraceEvent(eventType, dataObj);
+  }
+  else if (eventType === 'mcp' || eventType === 'mcp_tool') {
     handleMcpEvent(dataObj);
   }
   else if (eventType === 'content' || eventType === 'message' || dataObj.content) {
@@ -314,6 +326,67 @@ function handleSseEvent(dataObj: AnyObject, rawEventType = ''): boolean {
   return false;
 }
 
+function handleAgentTraceEvent(eventType: string, dataObj: AnyObject) {
+  const payload = (dataObj.payload || dataObj.content || dataObj) as AnyObject;
+
+  if (eventType === 'agent_run_start' && payload.runId) {
+    activeAgentRunId.value = payload.runId;
+    executionEvents.value = [];
+  }
+  else if (payload.runId && activeAgentRunId.value && payload.runId !== activeAgentRunId.value) {
+    return;
+  }
+
+  const status = normalizeTraceStatus(payload.status, eventType);
+  const name = payload.name || payload.title || eventType;
+  const stepId = payload.stepId || payload.runId || `${eventType}-${executionEvents.value.length}`;
+
+  const traceInfo: ToolCallInfo = {
+    key: ++toolCallKeyCounter,
+    name,
+    status,
+    result: formatTraceResult(payload, eventType),
+    timestamp: payload.timestamp || Date.now(),
+    type: payload.type || 'AGENT',
+    runId: payload.runId,
+    stepId,
+    input: payload.input,
+  };
+
+  const existingIndex = executionEvents.value.findIndex(item => item.stepId === stepId && item.name === name);
+  if (existingIndex >= 0) {
+    executionEvents.value[existingIndex] = {
+      ...executionEvents.value[existingIndex],
+      ...traceInfo,
+    };
+  }
+  else {
+    executionEvents.value = [...executionEvents.value, traceInfo];
+  }
+
+  const assistantMessage = getCurrentAssistantMessage();
+  if (assistantMessage) {
+    bubbleItems.value = [...bubbleItems.value];
+  }
+}
+
+function normalizeTraceStatus(status: unknown, eventType: string): ToolCallInfo['status'] {
+  if (eventType.endsWith('_start') || status === 'running') {
+    return 'pending';
+  }
+  if (status === 'error' || status === 'failed') {
+    return 'error';
+  }
+  return 'success';
+}
+
+function formatTraceResult(payload: AnyObject, eventType: string) {
+  if (payload.result !== undefined) {
+    return typeof payload.result === 'string' ? payload.result : JSON.stringify(payload.result, null, 2);
+  }
+  return JSON.stringify({ event: eventType, ...payload }, null, 2);
+}
+
 function appendReasoningContent(reasoningContent: string) {
   const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
   if (lastMessage) {
@@ -333,56 +406,46 @@ function handleMcpEvent(dataObj: AnyObject) {
       ? JSON.parse(dataObj.content)
       : dataObj.content;
 
-    const toolName = content.name || content.toolName || 'Unknown Tool';
-    const toolStatus = content.status || 'pending';
-    const toolResult = content.result || null;
-    const assistantMessage = getCurrentAssistantMessage();
-
-    if (!assistantMessage) {
+    if (content?.runId && activeAgentRunId.value && content.runId !== activeAgentRunId.value) {
       return;
     }
 
-    const currentToolCalls = assistantMessage.toolCalls || [];
+    const toolName = content.name || content.toolName || 'Unknown Tool';
+    const toolStatus = content.status || 'pending';
+    const toolResult = content.result || null;
+    const toolStepId = content.stepId || content.id || toolName;
+    const normalizedStatus = normalizeTraceStatus(toolStatus, toolStatus === 'pending' ? 'tool_call_start' : 'tool_call_done');
+    const traceInfo: ToolCallInfo = {
+      key: ++toolCallKeyCounter,
+      name: toolName,
+      status: normalizedStatus,
+      result: toolResult,
+      timestamp: Date.now(),
+      type: 'TOOL',
+      runId: content.runId,
+      stepId: toolStepId,
+      input: content.input,
+    };
 
-    if (toolStatus === 'pending') {
-      const toolInfo: ToolCallInfo = {
-        key: ++toolCallKeyCounter,
-        name: toolName,
-        status: 'pending',
-        result: null,
-        timestamp: Date.now(),
+    const index = executionEvents.value.findIndex(
+      t => t.stepId === toolStepId || (t.name === toolName && t.status === 'pending'),
+    );
+
+    if (index >= 0) {
+      const updatedEvents = [...executionEvents.value];
+      updatedEvents[index] = {
+        ...updatedEvents[index],
+        ...traceInfo,
+        key: updatedEvents[index].key,
       };
-      assistantMessage.toolCalls = [...currentToolCalls, toolInfo];
+      executionEvents.value = updatedEvents;
     }
     else {
-      const index = currentToolCalls.findIndex(
-        t => t.name === toolName && t.status === 'pending',
-      );
-      if (index >= 0) {
-        const updatedEvents = [...currentToolCalls];
-        updatedEvents[index] = {
-          ...updatedEvents[index],
-          status: toolStatus,
-          result: toolResult,
-          timestamp: Date.now(),
-        };
-        assistantMessage.toolCalls = updatedEvents;
-      }
-      else {
-        const toolInfo: ToolCallInfo = {
-          key: ++toolCallKeyCounter,
-          name: toolName,
-          status: toolStatus,
-          result: toolResult,
-          timestamp: Date.now(),
-        };
-        assistantMessage.toolCalls = [...currentToolCalls, toolInfo];
-      }
+      executionEvents.value = [...executionEvents.value, traceInfo];
     }
 
     bubbleItems.value = [...bubbleItems.value];
-    console.log('[SSE] 工具调用列表:', assistantMessage.toolCalls);
-    bubbleListRef.value?.scrollToBottom();
+    console.log('[SSE] 执行上下文列表:', executionEvents.value);
   }
   catch (err) {
     console.error('[SSE] MCP 事件解析失败:', err);
@@ -542,30 +605,6 @@ function handleCreateNewChat() {
 
         <template #content="{ item }">
           <div v-if="item.role === 'system'" class="assistant-answer-card">
-            <div v-if="item.toolCalls?.length" class="assistant-tool-call-block">
-              <div
-                class="tool-call-block-header"
-                @click="item.toolCallsCollapsed = !item.toolCallsCollapsed"
-              >
-                <div class="tool-call-heading">
-                  <span class="tool-call-title">工具调用</span>
-                  <span class="tool-call-count">{{ item.toolCalls.length }} 步</span>
-                </div>
-                <el-icon class="tool-call-toggle" :class="{ collapsed: item.toolCallsCollapsed }">
-                  <ArrowDown />
-                </el-icon>
-              </div>
-              <el-collapse-transition>
-                <div v-show="!item.toolCallsCollapsed" class="tool-call-list">
-                  <ToolCallCard
-                    v-for="tool in item.toolCalls"
-                    :key="tool.key"
-                    :tool-info="tool"
-                  />
-                </div>
-              </el-collapse-transition>
-            </div>
-
             <XMarkdown
               v-if="item.content"
               :markdown="item.content"
@@ -641,6 +680,45 @@ function handleCreateNewChat() {
         />
       </div>
     </div>
+
+    <aside class="agent-execution-panel">
+      <div class="execution-header">
+        <div>
+          <div class="execution-title">
+            执行上下文
+          </div>
+          <div class="execution-subtitle">
+            Agent、工具与计划
+          </div>
+        </div>
+        <el-tag size="small" type="info">
+          {{ executionEvents.length }} steps
+        </el-tag>
+      </div>
+
+      <div class="execution-toolbar">
+        <span>{{ executionEvents.filter(item => item.status === 'success').length }} done</span>
+        <span>{{ executionEvents.filter(item => item.status === 'pending').length }} running</span>
+        <button type="button" @click="executionEvents = []">
+          清空
+        </button>
+      </div>
+
+      <div class="execution-hint">
+        工具详情只在这里滚动展示，不占用对话正文空间。
+      </div>
+
+      <div class="execution-list">
+        <ToolCallCard
+          v-for="trace in executionEvents"
+          :key="trace.key"
+          :tool-info="trace"
+        />
+        <div v-if="!executionEvents.length" class="execution-empty">
+          开启内部统一 Agent 后，这里会显示协作步骤。
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
 
@@ -722,17 +800,22 @@ function handleCreateNewChat() {
 .chat-with-id-container {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  gap: 28px;
   width: 100%;
-  max-width: 800px;
+  max-width: 1280px;
   height: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
 
   .chat-warp {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     width: 100%;
+    max-width: 800px;
     height: calc(100vh - 60px);
 
     .thinking-chain-warp {
@@ -829,6 +912,96 @@ function handleCreateNewChat() {
   }
 }
 
+.agent-execution-panel {
+  width: 360px;
+  height: calc(100vh - 60px);
+  border-left: 1px solid #edf0f5;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.execution-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 18px 14px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.execution-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.execution-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.execution-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  color: #6b7280;
+  font-size: 12px;
+
+  span {
+    padding: 3px 8px;
+    border-radius: 7px;
+    background: #f3f5f8;
+    font-weight: 650;
+  }
+
+  button {
+    border: none;
+    background: transparent;
+    color: #5b6472;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 3px 4px;
+  }
+}
+
+.execution-hint {
+  margin: 0 18px 10px;
+  padding: 10px 12px;
+  border: 1px dashed #d9dee8;
+  border-radius: 8px;
+  color: #8a94a6;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.execution-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.execution-empty {
+  color: #9aa3b2;
+  font-size: 13px;
+  padding: 20px 4px;
+}
+
+@media (max-width: 1180px) {
+  .chat-with-id-container {
+    padding: 0 16px;
+  }
+
+  .agent-execution-panel {
+    display: none;
+  }
+}
+
 .assistant-answer-card {
   width: min(100%, 680px);
   padding: 12px 14px;
@@ -842,51 +1015,4 @@ function handleCreateNewChat() {
   }
 }
 
-.assistant-tool-call-block {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgb(226 232 240 / 75%);
-}
-
-.tool-call-block-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.tool-call-heading {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.tool-call-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.tool-call-count {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.tool-call-toggle {
-  color: #8a93a3;
-  transition: transform 0.2s ease;
-
-  &.collapsed {
-    transform: rotate(-90deg);
-  }
-}
-
-.tool-call-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-top: 8px;
-}
 </style>

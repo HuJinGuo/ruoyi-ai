@@ -5,10 +5,10 @@ import dev.langchain4j.agentic.observability.AgentRequest;
 import dev.langchain4j.agentic.observability.AgentResponse;
 import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.scope.AgenticScope;
-import dev.langchain4j.service.tool.BeforeToolExecution;
-import dev.langchain4j.service.tool.ToolExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.ruoyi.common.sse.utils.SseMessageUtils;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,6 +29,23 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
 
     /** 最终捕获到的思考结果（主 Agent 完成后写入，供外部获取） */
     private final AtomicReference<String> sharedOutputRef = new AtomicReference<>();
+    private final Long userId;
+    private final String runId;
+
+    public MyAgentListener() {
+        this.userId = null;
+        this.runId = null;
+    }
+
+    public MyAgentListener(Long userId) {
+        this.userId = userId;
+        this.runId = null;
+    }
+
+    public MyAgentListener(Long userId, String runId) {
+        this.userId = userId;
+        this.runId = runId;
+    }
 
     public String getCapturedResult() {
         return sharedOutputRef.get();
@@ -60,6 +77,7 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
         log.info("【Agent调用前】AgenticScope memoryId: {}", scope.memoryId());
         log.info("【Agent调用前】AgenticScope当前状态: {}", scope.state());
         log.info("【Agent调用前】Agent调用历史记录数: {}", scope.agentInvocations().size());
+        pushTrace("agent_step_start", agent.name(), agent.agentId(), "AGENT", "running", inputs, null);
 
         // 打印嵌套的子Agent信息
         if (!agent.subagents().isEmpty()) {
@@ -93,6 +111,7 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
             sharedOutputRef.set(outputStr);
             log.info("【Agent调用后】已捕获主Agent输出: {}", outputStr);
         }
+        pushTrace("agent_step_done", agent.name(), agent.agentId(), "AGENT", "success", inputs, truncate(outputStr, 800));
     }
 
     @Override
@@ -107,6 +126,7 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
         log.error("【Agent执行错误】Agent输入参数: {}", inputs);
         log.error("【Agent执行错误】错误类型: {}", throwable.getClass().getName());
         log.error("【Agent执行错误】错误信息: {}", throwable.getMessage(), throwable);
+        pushTrace("agent_step_done", agent.name(), agent.agentId(), "AGENT", "error", inputs, throwable.getMessage());
     }
 
     // ==================== AgenticScope 生命周期 ====================
@@ -126,20 +146,32 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
 
     // ==================== 工具执行生命周期 ====================
 //
-//    @Override
-//    public void beforeToolExecution(BeforeToolExecution beforeToolExecution) {
-//        var toolRequest = beforeToolExecution.request();
-//        log.info("【工具执行前】工具请求ID: {}", toolRequest.id());
-//        log.info("【工具执行前】工具名称: {}", toolRequest.name());
-//        log.info("【工具执行前】工具参数: {}", toolRequest.arguments());
-//    }
-//
-//    @Override
-//    public void afterToolExecution(ToolExecution toolExecution) {
-//        var toolRequest = toolExecution.request();
-//        log.info("【工具执行后】工具请求ID: {}", toolRequest.id());
-//        log.info("【工具执行后】工具名称: {}", toolRequest.name());
-//        log.info("【工具执行后】工具执行结果: {}", toolExecution.result());
-//        log.info("【工具执行后】工具执行是否失败: {}", toolExecution.hasFailed());
-//    }
+    private void pushTrace(String event, String name, String stepId, String type, String status, Object input, Object result) {
+        if (userId == null) {
+            return;
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (runId != null) {
+            payload.put("runId", runId);
+        }
+        payload.put("stepId", stepId);
+        payload.put("name", name);
+        payload.put("type", type);
+        payload.put("status", status);
+        payload.put("timestamp", System.currentTimeMillis());
+        if (input != null) {
+            payload.put("input", input);
+        }
+        if (result != null) {
+            payload.put("result", result);
+        }
+        SseMessageUtils.sendAgentEvent(userId, event, payload);
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength) + "...";
+    }
 }

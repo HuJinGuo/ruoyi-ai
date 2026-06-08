@@ -29,9 +29,9 @@ public class CrmQueryTool {
     private static final String LIMIT_20 = "limit 20";
 
     @Tool("按合同ID查询 CRM 合同")
-    public String crmContractQuery(Long contractId) {
+    public String crmContractQuery(String contractId) {
         log.info("【CRM工具调用】crmContractQuery contractId={}", contractId);
-        return toJson(SpringUtils.getBean(CrmContractMapper.class).selectById(contractId));
+        return toJson(SpringUtils.getBean(CrmContractMapper.class).selectById(parseId(contractId, "contractId")));
     }
 
     @Tool("按合同名称模糊查询 CRM 合同")
@@ -45,9 +45,9 @@ public class CrmQueryTool {
     }
 
     @Tool("按客户ID查询 CRM 客户")
-    public String crmCustomerQuery(Long customerId) {
+    public String crmCustomerQuery(String customerId) {
         log.info("【CRM工具调用】crmCustomerQuery customerId={}", customerId);
-        return toJson(SpringUtils.getBean(CrmCustomerMapper.class).selectById(customerId));
+        return toJson(SpringUtils.getBean(CrmCustomerMapper.class).selectById(parseId(customerId, "customerId")));
     }
 
     @Tool("按客户名称、简称或编码模糊查询 CRM 客户")
@@ -66,11 +66,12 @@ public class CrmQueryTool {
     }
 
     @Tool("按客户ID查询 CRM 客户联系人")
-    public String crmContactQueryByCustomerId(Long customerId) {
+    public String crmContactQueryByCustomerId(String customerId) {
         log.info("【CRM工具调用】crmContactQueryByCustomerId customerId={}", customerId);
+        Long id = parseId(customerId, "customerId");
         return toJson(SpringUtils.getBean(CrmContactMapper.class)
             .selectList(new LambdaQueryWrapper<CrmContact>()
-                .eq(CrmContact::getCustomerId, customerId)
+                .eq(CrmContact::getCustomerId, id)
                 .orderByDesc(CrmContact::getCreateTime)
                 .last(LIMIT_20)));
     }
@@ -91,9 +92,9 @@ public class CrmQueryTool {
     }
 
     @Tool("按商机ID查询 CRM 商机")
-    public String crmOpportunityQuery(Long opportunityId) {
+    public String crmOpportunityQuery(String opportunityId) {
         log.info("【CRM工具调用】crmOpportunityQuery opportunityId={}", opportunityId);
-        return toJson(SpringUtils.getBean(CrmOpportunityMapper.class).selectById(opportunityId));
+        return toJson(SpringUtils.getBean(CrmOpportunityMapper.class).selectById(parseId(opportunityId, "opportunityId")));
     }
 
     @Tool("按商机名称模糊查询 CRM 商机")
@@ -107,53 +108,69 @@ public class CrmQueryTool {
     }
 
     @Tool("按客户ID查询 CRM 报价")
-    public String crmQuoteQueryByCustomerId(Long customerId) {
+    public String crmQuoteQueryByCustomerId(String customerId) {
         log.info("【CRM工具调用】crmQuoteQueryByCustomerId customerId={}", customerId);
+        Long id = parseId(customerId, "customerId");
         return toJson(SpringUtils.getBean(CrmQuoteMapper.class)
             .selectList(new LambdaQueryWrapper<CrmQuote>()
-                .eq(CrmQuote::getCustomerId, customerId)
+                .eq(CrmQuote::getCustomerId, id)
                 .orderByDesc(CrmQuote::getCreateTime)
                 .last(LIMIT_20)));
     }
 
     @Tool("按商机ID查询 CRM 报价")
-    public String crmQuoteQueryByOpportunityId(Long opportunityId) {
+    public String crmQuoteQueryByOpportunityId(String opportunityId) {
         log.info("【CRM工具调用】crmQuoteQueryByOpportunityId opportunityId={}", opportunityId);
+        Long id = parseId(opportunityId, "opportunityId");
         return toJson(SpringUtils.getBean(CrmQuoteMapper.class)
             .selectList(new LambdaQueryWrapper<CrmQuote>()
-                .eq(CrmQuote::getOpportunityId, opportunityId)
+                .eq(CrmQuote::getOpportunityId, id)
                 .orderByDesc(CrmQuote::getCreateTime)
                 .last(LIMIT_20)));
     }
 
     @Tool("按客户ID查询 CRM 回款计划")
-    public String crmPaymentPlanQueryByCustomerId(Long customerId) {
+    public String crmPaymentPlanQueryByCustomerId(String customerId) {
         log.info("【CRM工具调用】crmPaymentPlanQueryByCustomerId customerId={}", customerId);
+        Long id = parseId(customerId, "customerId");
         return toJson(SpringUtils.getBean(CrmPaymentPlanMapper.class)
             .selectList(new LambdaQueryWrapper<CrmPaymentPlan>()
-                .eq(CrmPaymentPlan::getCustomerId, customerId)
+                .eq(CrmPaymentPlan::getCustomerId, id)
                 .orderByDesc(CrmPaymentPlan::getCreateTime)
                 .last(LIMIT_20)));
     }
 
     @Tool("按合同ID查询 CRM 回款计划")
-    public String crmPaymentPlanQueryByContractId(Long contractId) {
+    public String crmPaymentPlanQueryByContractId(String contractId) {
         log.info("【CRM工具调用】crmPaymentPlanQueryByContractId contractId={}", contractId);
+        Long id = parseId(contractId, "contractId");
         return toJson(SpringUtils.getBean(CrmPaymentPlanMapper.class)
             .selectList(new LambdaQueryWrapper<CrmPaymentPlan>()
-                .eq(CrmPaymentPlan::getContractId, contractId)
+                .eq(CrmPaymentPlan::getContractId, id)
                 .orderByDesc(CrmPaymentPlan::getCreateTime)
                 .last(LIMIT_20)));
     }
 
     @Tool("按商机ID查询 CRM 回款计划")
-    public String crmPaymentPlanQueryByOpportunityId(Long opportunityId) {
+    public String crmPaymentPlanQueryByOpportunityId(String opportunityId) {
         log.info("【CRM工具调用】crmPaymentPlanQueryByOpportunityId opportunityId={}", opportunityId);
+        Long id = parseId(opportunityId, "opportunityId");
         return toJson(SpringUtils.getBean(CrmPaymentPlanMapper.class)
             .selectList(new LambdaQueryWrapper<CrmPaymentPlan>()
-                .eq(CrmPaymentPlan::getOpportunityId, opportunityId)
+                .eq(CrmPaymentPlan::getOpportunityId, id)
                 .orderByDesc(CrmPaymentPlan::getCreateTime)
                 .last(LIMIT_20)));
+    }
+
+    private Long parseId(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + "不能为空");
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(fieldName + "格式不正确: " + value, e);
+        }
     }
 
     private String toJson(Object value) {

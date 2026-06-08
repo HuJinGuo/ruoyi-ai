@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * SSE 事件数据传输对象
@@ -51,6 +52,11 @@ public class SseEventDto implements Serializable {
     private Boolean done;
 
     /**
+     * 结构化负载，用于 Agent 执行上下文、工具调用详情等非正文事件。
+     */
+    private Map<String, Object> payload;
+
+    /**
      * 创建内容事件
      */
     public static SseEventDto content(String content) {
@@ -87,6 +93,16 @@ public class SseEventDto implements Serializable {
         return SseEventDto.builder()
             .event("error")
             .error(error)
+            .build();
+    }
+
+    /**
+     * 创建 Agent 执行上下文事件
+     */
+    public static SseEventDto agentEvent(String event, Map<String, Object> payload) {
+        return SseEventDto.builder()
+            .event(event)
+            .payload(payload)
             .build();
     }
 

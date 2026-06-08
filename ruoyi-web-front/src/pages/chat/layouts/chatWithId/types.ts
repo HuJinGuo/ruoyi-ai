@@ -12,4 +12,12 @@ export interface ToolCallInfo {
   result: string | null;
   /** 调用时间戳 */
   timestamp: number;
+  /** 类型：AGENT / TOOL / GUARD / MODEL */
+  type?: string;
+  /** 运行 ID */
+  runId?: string;
+  /** 步骤 ID */
+  stepId?: string;
+  /** 调用输入 */
+  input?: unknown;
 }
