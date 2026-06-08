@@ -28,12 +28,8 @@ import dev.langchain4j.rag.query.Metadata;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.ruoyi.agent.ChartGenerationAgent;
-import org.ruoyi.agent.EchartsAgent;
-import org.ruoyi.agent.SkillsAgent;
-import org.ruoyi.agent.SqlAgent;
-import org.ruoyi.agent.WebSearchAgent;
-import org.ruoyi.agent.XtpManufacturingAgent;
+import org.ruoyi.agent.*;
+import org.ruoyi.agent.tool.CrmQueryTool;
 import org.ruoyi.agent.tool.ExecuteSqlQueryTool;
 import org.ruoyi.agent.tool.QueryAllTablesTool;
 import org.ruoyi.agent.tool.QueryTableSchemaTool;
@@ -48,6 +44,7 @@ import org.ruoyi.common.chat.service.chat.IChatModelService;
 import org.ruoyi.common.chat.service.chat.IChatService;
 import org.ruoyi.common.chat.service.workFlow.IWorkFlowStarterService;
 import org.ruoyi.common.core.utils.ObjectUtils;
+import org.ruoyi.common.core.utils.SpringUtils;
 import org.ruoyi.common.core.utils.StringUtils;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.common.sse.core.SseEmitterManager;
@@ -67,6 +64,8 @@ import org.ruoyi.service.vector.VectorStoreService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import dev.langchain4j.agent.tool.Tool;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +88,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatServiceFacade implements IChatService {
 
     private static final Integer DEFAULT_MAX_MESSAGES = 20;
+
+    private static final String DEFAULT_NPX_COMMAND = "/Users/yuejin/.nvm/versions/node/v24.12.0/bin/npx";
+
+    private static final String NPX_COMMAND = System.getProperty("mcp.npx.command",
+        System.getenv().getOrDefault("MCP_NPX_COMMAND", DEFAULT_NPX_COMMAND));
 
     private final IChatModelService chatModelService;
 
@@ -215,7 +219,7 @@ public class ChatServiceFacade implements IChatService {
         }
         // 处理思考模式
         if (chatRequest.getEnableThinking()) {
-           return handleThinkingMode(chatRequest);
+            return handleThinkingMode(chatRequest);
         }
 
         return null;
@@ -225,139 +229,182 @@ public class ChatServiceFacade implements IChatService {
      * 处理思考模式
      *
      * @param chatRequest     聊天请求
-
      */
     private SseEmitter handleThinkingMode(ChatRequest chatRequest) {
-        // 配置监督者模型
-        OpenAiChatModel plannerModel = OpenAiChatModel.builder()
-            .baseUrl(chatRequest.getChatModelVo().getApiHost())
-            .apiKey(chatRequest.getChatModelVo().getApiKey())
-            .modelName(chatRequest.getChatModelVo().getModelName())
-            .build();
-
-        // Bing 搜索 MCP 客户端
-        McpTransport bingTransport = new StdioMcpTransport.Builder()
-            .command(List.of("C:\\Program Files\\nodejs\\npx.cmd", "-y", "bing-cn-mcp"))
-            .logEvents(true)
-            .build();
-
         Long userId = chatRequest.getUserId();
-        McpClient bingMcpClient = new DefaultMcpClient.Builder()
-            .transport(bingTransport)
-            .listener(new MyMcpClientListener(userId))
-            .build();
-
-        // Playwright MCP 客户端 - 浏览器自动化工具
-        McpTransport playwrightTransport = new StdioMcpTransport.Builder()
-            .command(List.of("C:\\Program Files\\nodejs\\npx.cmd", "-y", "@playwright/mcp@latest"))
-            .logEvents(true)
-            .build();
-
-        McpClient playwrightMcpClient = new DefaultMcpClient.Builder()
-            .transport(playwrightTransport)
-            .listener(new MyMcpClientListener(userId))
-            .build();
-
-        // Filesystem MCP 客户端 - 文件管理工具
-        // 允许 AI 读取、写入、搜索文件（基于当前项目根目录）
-        String userDir = System.getProperty("user.dir");
-        McpTransport filesystemTransport = new StdioMcpTransport.Builder()
-            .command(List.of("C:\\Program Files\\nodejs\\npx.cmd", "-y",
-                "@modelcontextprotocol/server-filesystem", userDir))
-            .logEvents(true)
-
-            .build();
-
-        McpClient filesystemMcpClient = new DefaultMcpClient.Builder()
-            .transport(filesystemTransport)
-            .listener(new MyMcpClientListener(userId))
-            .build();
-
-        // 合并三个 MCP 客户端的工具
-        ToolProvider toolProvider = McpToolProvider.builder()
-            // bingMcpClient,
-            .mcpClients(List.of(playwrightMcpClient, filesystemMcpClient))
-            .build();
-
-        // ========== LangChain4j Skills 基本用法 ==========
-        // 通过 SKILL.md 文件定义，LLM 按需通过 activate_skill 工具加载
-        // 加载 Skills - 使用相对路径，基于项目根目录
-        java.nio.file.Path skillsPath = java.nio.file.Path.of(userDir, "ruoyi-admin/src/main/resources/skills");
-        List<dev.langchain4j.skills.FileSystemSkill> skillsList = dev.langchain4j.skills.FileSystemSkillLoader
-            .loadSkills(skillsPath)
-            ;
-
-        ShellSkills skills = ShellSkills.from(skillsList);
-
-        // 构建子 Agent
-        WebSearchAgent searchAgent  = AgenticServices.agentBuilder(WebSearchAgent.class)
-            .chatModel(plannerModel)
-            .toolProvider(toolProvider)
-            .listener(new MyAgentListener())
-            .build();
-
-        // 构建子 Agent 2: SkillsAgent - 负责文档处理技能（docx、pdf、xlsx）
-        // 独立管理 Skills 工具
-        SkillsAgent skillsAgent = AgenticServices.agentBuilder(SkillsAgent.class)
-            .chatModel(plannerModel)
-            .systemMessage("You have access to the following skills:\n" + skills.formatAvailableSkills()
-                + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.")
-            .toolProvider(skills.toolProvider())
-            .build();
-
-        // 构建子 Agent 3: SqlAgent - 负责数据库查询
-        SqlAgent sqlAgent = AgenticServices.agentBuilder(SqlAgent.class)
-            .chatModel(plannerModel)
-            .tools(new QueryAllTablesTool(), new QueryTableSchemaTool(), new ExecuteSqlQueryTool())
-            .listener(new MyAgentListener())
-            .build();
-
-        // 构建子 Agent 4: ChartGenerationAgent - 负责图表生成
-        ChartGenerationAgent chartGenerationAgent = AgenticServices.agentBuilder(ChartGenerationAgent.class)
-            .chatModel(plannerModel)
-            .listener(new MyAgentListener())
-            .build();
-
-        // 构建子 Agent 5: EchartsAgent - 负责数据可视化（结合 SQL 查询生成 Echarts 图表）
-        EchartsAgent echartsAgent = AgenticServices.agentBuilder(EchartsAgent.class)
-            .chatModel(plannerModel)
-            .tools(new QueryAllTablesTool(), new QueryTableSchemaTool(), new ExecuteSqlQueryTool())
-            .listener(new MyAgentListener())
-            .build();
-
-        // 构建子 Agent 6: XTP 制造闭环 - 负责合同到制造交付的流程动作
-        XtpManufacturingAgent xtpManufacturingAgent = AgenticServices.agentBuilder(XtpManufacturingAgent.class)
-            .chatModel(plannerModel)
-            .tools(new XtpManufacturingFlowTool())
-            .listener(new MyAgentListener())
-            .build();
-
-        // 构建监督者 Agent - 管理多个子 Agent
-        SupervisorAgent supervisor = AgenticServices.supervisorBuilder()
-            .chatModel(plannerModel)
-            //.listener(new SupervisorStreamListener(null))
-            .subAgents(skillsAgent, searchAgent, sqlAgent, chartGenerationAgent, echartsAgent, xtpManufacturingAgent)
-            // 加入历史上下文 - 使用 ChatMemoryProvider 提供持久化的聊天内存
-            //.chatMemoryProvider(memoryId -> createChatMemory(chatRequest.getSessionId()))
-            .responseStrategy(SupervisorResponseStrategy.LAST)
-            .build();
-
         String tokenValue = chatRequest.getTokenValue();
+        List<McpClient> mcpClients = new ArrayList<>();
 
-        // 异步执行 supervisor，避免阻塞 HTTP 请求线程导致 SSE 事件被缓冲
-        CompletableFuture.runAsync(() -> {
-            try {
-                String result = supervisor.invoke(chatRequest.getContent());
-                SseMessageUtils.sendContent(userId, result);
-                SseMessageUtils.sendDone(userId);
-            } catch (Exception e) {
-                log.error("Supervisor 执行失败", e);
-                SseMessageUtils.sendError(userId, e.getMessage());
-            } finally {
-                SseMessageUtils.completeConnection(userId, tokenValue);
-            }
-        });
-        return chatRequest.getEmitter();
+        try {
+            // 配置监督者模型
+            OpenAiChatModel plannerModel = OpenAiChatModel.builder()
+                .baseUrl(chatRequest.getChatModelVo().getApiHost())
+                .apiKey(chatRequest.getChatModelVo().getApiKey())
+                .modelName(chatRequest.getChatModelVo().getModelName())
+                .build();
+
+            java.nio.file.Path projectRoot = resolveProjectRoot();
+            String userDir = projectRoot.toString();
+
+            addMcpClientIfHealthy(mcpClients, "playwright",
+                List.of(NPX_COMMAND, "-y", "@playwright/mcp@latest"), userId);
+            addMcpClientIfHealthy(mcpClients, "filesystem",
+                List.of(NPX_COMMAND, "-y", "@modelcontextprotocol/server-filesystem", userDir), userId);
+
+            ToolProvider toolProvider = McpToolProvider.builder()
+                .mcpClients(mcpClients)
+                .build();
+
+            // ========== LangChain4j Skills 基本用法 ==========
+            // 通过 SKILL.md 文件定义，LLM 按需通过 activate_skill 工具加载
+            // 加载 Skills - 使用相对路径，基于项目根目录
+            java.nio.file.Path skillsPath = projectRoot.resolve("ruoyi-admin/src/main/resources/skills");
+            List<dev.langchain4j.skills.FileSystemSkill> skillsList = dev.langchain4j.skills.FileSystemSkillLoader
+                .loadSkills(skillsPath);
+
+            ShellSkills skills = ShellSkills.from(skillsList);
+
+            // 构建子 Agent
+            WebSearchAgent searchAgent = AgenticServices.agentBuilder(WebSearchAgent.class)
+                .chatModel(plannerModel)
+                .toolProvider(toolProvider)
+                .listener(new MyAgentListener())
+                .build();
+
+            // 构建子 Agent 2: SkillsAgent - 负责文档处理技能（docx、pdf、xlsx）
+            // 独立管理 Skills 工具
+            SkillsAgent skillsAgent = AgenticServices.agentBuilder(SkillsAgent.class)
+                .chatModel(plannerModel)
+                .systemMessage("You have access to the following skills:\n" + skills.formatAvailableSkills()
+                    + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.")
+                .toolProvider(skills.toolProvider())
+                .build();
+
+            // 构建子 Agent 3: SqlAgent - 负责数据库查询
+            SqlAgent sqlAgent = AgenticServices.agentBuilder(SqlAgent.class)
+                .chatModel(plannerModel)
+                .tools(new QueryAllTablesTool(), new QueryTableSchemaTool(), new ExecuteSqlQueryTool())
+                .listener(new MyAgentListener())
+                .build();
+
+            // 构建子 Agent 4: ChartGenerationAgent - 负责图表生成
+            ChartGenerationAgent chartGenerationAgent = AgenticServices.agentBuilder(ChartGenerationAgent.class)
+                .chatModel(plannerModel)
+                .listener(new MyAgentListener())
+                .build();
+
+            // 构建子 Agent 5: EchartsAgent - 负责数据可视化（结合 SQL 查询生成 Echarts 图表）
+            EchartsAgent echartsAgent = AgenticServices.agentBuilder(EchartsAgent.class)
+                .chatModel(plannerModel)
+                .tools(new QueryAllTablesTool(), new QueryTableSchemaTool(), new ExecuteSqlQueryTool())
+                .listener(new MyAgentListener())
+                .build();
+
+            XtpManufacturingFlowTool xtpTool = SpringUtils.getBean(XtpManufacturingFlowTool.class);
+            XtpServiceAgent xtpAgent = AgenticServices.agentBuilder(XtpServiceAgent.class)
+                .chatModel(plannerModel)
+                .tools(xtpTool)
+                .listener(new MyAgentListener())
+                .build();
+
+            CrmQueryTool crmQueryTool = SpringUtils.getBean(CrmQueryTool.class);
+            CrmQueryAgent crmQueryAgent = AgenticServices.agentBuilder(CrmQueryAgent.class)
+                .chatModel(plannerModel)
+                .tools(crmQueryTool)
+                .listener(new MyAgentListener())
+                .build();
+
+            // 构建监督者 Agent - 管理多个子 Agent
+            SupervisorAgent supervisor = AgenticServices.supervisorBuilder()
+                .chatModel(plannerModel)
+                .supervisorContext("""
+                    你是子 Agent 路由器，只能调用当前已注册的子 Agent 名称，不要创造未注册的 Agent 名。
+                    CRM 业务查询统一交给 crmQuery，包括 CRM 合同、客户、联系人、商机、报价、回款计划。
+                    XTP 制造、工单、采购、库存等制造闭环查询交给 xtpQuery。
+                    数据库通用查询交给 sqlQuery，文档处理交给 skills，网页搜索或浏览器操作交给 webSearch。
+                    图表配置生成交给 chartGeneration 或 echarts。
+                    """)
+                //.listener(new SupervisorStreamListener(null))
+                .subAgents(skillsAgent, searchAgent, sqlAgent, chartGenerationAgent, echartsAgent, xtpAgent, crmQueryAgent)
+                // 加入历史上下文 - 使用 ChatMemoryProvider 提供持久化的聊天内存
+//                .chatMemoryProvider(memoryId -> createChatMemory(chatRequest.getSessionId()))
+                .responseStrategy(SupervisorResponseStrategy.LAST)
+                .build();
+
+            // 异步执行 supervisor，避免阻塞 HTTP 请求线程导致 SSE 事件被缓冲
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String result = supervisor.invoke(chatRequest.getContent());
+                    SseMessageUtils.sendContent(userId, result);
+                    SseMessageUtils.sendDone(userId);
+                } catch (Exception e) {
+                    log.error("Supervisor 执行失败", e);
+                    SseMessageUtils.sendError(userId, e.getMessage());
+                } finally {
+                    closeMcpClientsQuietly(mcpClients);
+                    SseMessageUtils.completeConnection(userId, tokenValue);
+                }
+            });
+            return chatRequest.getEmitter();
+        } catch (Exception e) {
+            String errorMessage = resolveErrorMessage(e);
+            log.error("思考模式初始化失败: {}", errorMessage, e);
+            closeMcpClientsQuietly(mcpClients);
+            SseMessageUtils.sendError(userId, errorMessage);
+            SseMessageUtils.completeConnection(userId, tokenValue);
+            return chatRequest.getEmitter();
+        }
+    }
+
+    private void addMcpClientIfHealthy(List<McpClient> clients, String name, List<String> command, Long userId) {
+        McpClient client = null;
+        try {
+            McpTransport transport = new StdioMcpTransport.Builder()
+                .command(command)
+                .logEvents(true)
+                .build();
+
+            client = new DefaultMcpClient.Builder()
+                .transport(transport)
+                .listener(new MyMcpClientListener(userId))
+                .build();
+
+            client.listTools();
+            clients.add(client);
+            log.info("MCP 工具启动成功: {}, command={}", name, command);
+        } catch (Exception e) {
+            log.warn("MCP 工具启动失败，已跳过: {}, command={}, error={}", name, command, resolveErrorMessage(e), e);
+            closeMcpClientQuietly(client);
+        }
+    }
+
+    private void closeMcpClientQuietly(McpClient client) {
+        if (client == null) {
+            return;
+        }
+        try {
+            client.close();
+        } catch (Exception closeError) {
+            log.debug("关闭失败的 MCP Client 时出错: {}", closeError.getMessage());
+        }
+    }
+
+    private void closeMcpClientsQuietly(List<McpClient> clients) {
+        for (McpClient client : clients) {
+            closeMcpClientQuietly(client);
+        }
+        clients.clear();
+    }
+
+    private java.nio.file.Path resolveProjectRoot() {
+        java.nio.file.Path userDir = java.nio.file.Path.of(System.getProperty("user.dir")).toAbsolutePath();
+        if (java.nio.file.Files.isDirectory(userDir.resolve("ruoyi-admin/src/main/resources/skills"))) {
+            return userDir;
+        }
+        if (java.nio.file.Files.isDirectory(userDir.resolve("src/main/resources/skills")) && userDir.getParent() != null) {
+            return userDir.getParent();
+        }
+        return userDir;
     }
 
     /**

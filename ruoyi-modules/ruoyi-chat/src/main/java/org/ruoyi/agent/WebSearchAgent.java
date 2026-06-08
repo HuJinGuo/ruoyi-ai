@@ -26,6 +26,6 @@ public interface WebSearchAgent {
         - 在回答中注明信息来源
         """)
     @UserMessage("{{query}}")
-    @Agent("浏览器工具助手，支持网络搜索、网页抓取和浏览器自动化操作")
+    @Agent(name = "webSearch", description = "浏览器工具助手，支持网络搜索、网页抓取和浏览器自动化操作")
     String search(@V("query") String query);
 }

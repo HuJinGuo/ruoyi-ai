@@ -1,0 +1,631 @@
+- generic [ref=e2]:
+  - link "Exclusive news, data and analytics for financial market professionals from LSEG." [ref=e6] [cursor=pointer]:
+    - /url: /differentiator/
+    - generic [ref=e7]:
+      - text: Learn more about
+      - generic [ref=e8]: Refinitiv
+    - img [ref=e10]
+  - banner [ref=e14]:
+    - link "Skip to main content" [ref=e15] [cursor=pointer]:
+      - /url: "#main-content"
+      - generic [ref=e17]: Skip to main content
+    - generic [ref=e20]:
+      - link "Reuters home" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img [ref=e23]
+      - generic [ref=e26]:
+        - link "Subscribe" [ref=e27] [cursor=pointer]:
+          - /url: https://www.reuters.com/account/subscribe/offer/?redirect=https%3A%2F%2Fwww.reuters.com%2Fmarkets%2Fcommodities%2F&referrer=subscription_button&journeyStart=navigation
+        - button "Open search bar" [ref=e29] [cursor=pointer]:
+          - img [ref=e31]
+        - button "Menu" [ref=e34] [cursor=pointer]:
+          - img [ref=e36]
+  - generic [ref=e39]:
+    - list [ref=e41]:
+      - listitem [ref=e42]:
+        - paragraph [ref=e43]:
+          - generic [ref=e44]: trading lower
+        - link "Negative SPX" [ref=e46] [cursor=pointer]:
+          - /url: /markets/quote/.SPX/
+          - generic [ref=e47]: Negative
+          - text: SPX
+        - generic [ref=e48]: 7,383.74
+        - generic [ref=e50]:
+          - text: "-2.64%"
+          - generic [ref=e51]: Negative
+      - listitem [ref=e52]:
+        - paragraph [ref=e53]:
+          - generic [ref=e54]: trading lower
+        - link "Negative IXIC" [ref=e56] [cursor=pointer]:
+          - /url: /markets/quote/.IXIC/
+          - generic [ref=e57]: Negative
+          - text: IXIC
+        - generic [ref=e58]: 25,709.43
+        - generic [ref=e60]:
+          - text: "-4.18%"
+          - generic [ref=e61]: Negative
+      - listitem [ref=e62]:
+        - paragraph [ref=e63]:
+          - generic [ref=e64]: trading lower
+        - link "Negative DJI" [ref=e66] [cursor=pointer]:
+          - /url: /markets/quote/.DJI/
+          - generic [ref=e67]: Negative
+          - text: DJI
+        - generic [ref=e68]: 50,866.78
+        - generic [ref=e70]:
+          - text: "-1.35%"
+          - generic [ref=e71]: Negative
+      - listitem [ref=e72]:
+        - paragraph [ref=e73]:
+          - generic [ref=e74]: trading lower
+        - link "Negative STOXX" [ref=e76] [cursor=pointer]:
+          - /url: /markets/quote/.STOXX/
+          - generic [ref=e77]: Negative
+          - text: STOXX
+        - generic [ref=e78]: "622.66"
+        - generic [ref=e80]:
+          - text: "-0.29%"
+          - generic [ref=e81]: Negative
+      - listitem [ref=e82]:
+        - paragraph [ref=e83]:
+          - generic [ref=e84]: trading higher
+        - link "Positive FTSE" [ref=e86] [cursor=pointer]:
+          - /url: /markets/quote/.FTSE/
+          - generic [ref=e87]: Positive
+          - text: FTSE
+        - generic [ref=e88]: 10,368.05
+        - generic [ref=e90]:
+          - text: +0.07%
+          - generic [ref=e91]: Positive
+      - listitem [ref=e92]:
+        - paragraph [ref=e93]:
+          - generic [ref=e94]: trading lower
+        - link "Negative N225" [ref=e96] [cursor=pointer]:
+          - /url: /markets/quote/.N225/
+          - generic [ref=e97]: Negative
+          - text: N225
+        - generic [ref=e98]: 64,040.40
+        - generic [ref=e100]:
+          - text: "-3.83%"
+          - generic [ref=e101]: Negative
+    - link "Market data" [ref=e102] [cursor=pointer]:
+      - /url: /lseg/
+  - generic [ref=e104]:
+    - heading "Commodities" [level=1] [ref=e105]
+    - navigation "Category" [ref=e107]:
+      - button "Commodities" [ref=e109] [cursor=pointer]:
+        - generic [ref=e111]:
+          - text: Commodities
+          - img [ref=e112]
+    - link "LSEG Official Data Partner" [ref=e114] [cursor=pointer]:
+      - /url: https://www.lseg.com/en?utm_source=reuters.com&utm_medium=lseglogo&utm_campaign=Reuters_LsegLogo_Links
+      - generic [ref=e115]:
+        - img "LSEG" [ref=e116]
+        - generic [ref=e118]: Official Data Partner
+  - main [ref=e119]:
+    - status "Loading search component" [ref=e120]
+    - status "Loading commodity contracts data" [ref=e126]
+    - generic [ref=e204]:
+      - list [ref=e205]:
+        - listitem [ref=e206]:
+          - time [ref=e208]: 1 hour ago
+          - link "Gold extends losses on US interest rate-hike fears" [ref=e210] [cursor=pointer]:
+            - /url: /world/india/gold-extends-losses-us-interest-rate-hike-fears-2026-06-08/
+            - generic [ref=e211]: Gold extends losses on US interest rate-hike fears
+          - figure [ref=e212]:
+            - link [ref=e213] [cursor=pointer]:
+              - /url: /world/india/gold-extends-losses-us-interest-rate-hike-fears-2026-06-08/
+              - img [ref=e216]
+        - listitem [ref=e217]:
+          - generic [ref=e218]:
+            - link "Business category" [ref=e220] [cursor=pointer]:
+              - /url: /business/
+              - text: Business
+              - generic [ref=e221]: category
+            - text: ·
+            - time [ref=e222]: 1 hour ago
+          - 'link "Saving Siri: After two years of stumbles, is Apple''s AI moment here?" [ref=e224] [cursor=pointer]':
+            - /url: /business/saving-siri-after-two-years-stumbles-is-apples-ai-moment-here-2026-06-08/
+            - generic [ref=e225]: "Saving Siri: After two years of stumbles, is Apple's AI moment here?"
+          - figure [ref=e226]:
+            - link [ref=e227] [cursor=pointer]:
+              - /url: /business/saving-siri-after-two-years-stumbles-is-apples-ai-moment-here-2026-06-08/
+              - img [ref=e230]
+        - listitem [ref=e231]:
+          - generic [ref=e232]:
+            - link "World category" [ref=e234] [cursor=pointer]:
+              - /url: /world/
+              - text: World
+              - generic [ref=e235]: category
+            - text: ·
+            - time [ref=e236]: 2 hours ago
+          - link "Ukrainian drone kills one in Russia-annexed Crimea, Moscow-installed governor says" [ref=e238] [cursor=pointer]:
+            - /url: /world/ukrainian-drone-kills-one-russia-annexed-crimea-moscow-installed-governor-says-2026-06-08/
+            - generic [ref=e239]: Ukrainian drone kills one in Russia-annexed Crimea, Moscow-installed governor says
+          - figure [ref=e240]:
+            - link [ref=e241] [cursor=pointer]:
+              - /url: /world/ukrainian-drone-kills-one-russia-annexed-crimea-moscow-installed-governor-says-2026-06-08/
+              - img [ref=e244]
+        - listitem [ref=e245]:
+          - generic [ref=e246]:
+            - link "World at Work category" [ref=e248] [cursor=pointer]:
+              - /url: /business/world-at-work/
+              - text: World at Work
+              - generic [ref=e249]: category
+            - text: ·
+            - time [ref=e250]: 45 mins ago
+          - link "Workers to escalate strike at Inpex's Ichthys LNG sites after talks fail" [ref=e252] [cursor=pointer]:
+            - /url: /business/world-at-work/workers-escalate-strike-inpexs-ichthys-lng-sites-after-talks-fail-2026-06-08/
+            - generic [ref=e253]: Workers to escalate strike at Inpex's Ichthys LNG sites after talks fail
+          - figure [ref=e254]:
+            - link [ref=e255] [cursor=pointer]:
+              - /url: /business/world-at-work/workers-escalate-strike-inpexs-ichthys-lng-sites-after-talks-fail-2026-06-08/
+        - listitem [ref=e258]:
+          - generic [ref=e259]:
+            - link "Business category" [ref=e261] [cursor=pointer]:
+              - /url: /business/
+              - text: Business
+              - generic [ref=e262]: category
+            - text: ·
+            - time [ref=e263]: 56 mins ago
+          - link "Oil prices rise more than $2 on Israel strikes on Lebanon" [ref=e265] [cursor=pointer]:
+            - /url: /business/energy/oil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07/
+            - generic [ref=e266]: Oil prices rise more than $2 on Israel strikes on Lebanon
+          - figure [ref=e267]:
+            - link [ref=e268] [cursor=pointer]:
+              - /url: /business/energy/oil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07/
+        - listitem [ref=e271]:
+          - time [ref=e273]: 4 mins ago
+          - link "Tumbling tech darlings slam brakes on AI rally" [ref=e275] [cursor=pointer]:
+            - /url: /world/china/global-markets-global-markets-2026-06-07/
+            - generic [ref=e276]: Tumbling tech darlings slam brakes on AI rally
+          - figure [ref=e277]:
+            - link [ref=e278] [cursor=pointer]:
+              - /url: /world/china/global-markets-global-markets-2026-06-07/
+        - listitem [ref=e281]:
+          - time [ref=e283]: 3 hours ago
+          - link "China dominates low-carbon industrial projects, US lags, report says" [ref=e285] [cursor=pointer]:
+            - /url: /business/energy/china-dominates-low-carbon-industrial-projects-us-lags-report-says-2026-06-07/
+            - generic [ref=e286]: China dominates low-carbon industrial projects, US lags, report says
+          - figure [ref=e287]:
+            - link [ref=e288] [cursor=pointer]:
+              - /url: /business/energy/china-dominates-low-carbon-industrial-projects-us-lags-report-says-2026-06-07/
+        - listitem [ref=e291]:
+          - generic [ref=e292]:
+            - link "Business category" [ref=e294] [cursor=pointer]:
+              - /url: /business/
+              - text: Business
+              - generic [ref=e295]: category
+            - text: ·
+            - time [ref=e296]: 6 hours ago
+          - link "LATAM CEO sees more airline capacity cuts if fuel shock persists, includes gallery" [ref=e298] [cursor=pointer]:
+            - /url: /business/latam-ceo-sees-more-airline-capacity-cuts-if-fuel-shock-persists-2026-06-07/
+            - generic [ref=e299]: LATAM CEO sees more airline capacity cuts if fuel shock persists
+          - figure [ref=e300]:
+            - link [ref=e301] [cursor=pointer]:
+              - /url: /business/latam-ceo-sees-more-airline-capacity-cuts-if-fuel-shock-persists-2026-06-07/
+        - listitem [ref=e304]:
+          - time [ref=e306]: 5 hours ago
+          - link "Iran rejects idea of using its assets to pay damages to US allies" [ref=e308] [cursor=pointer]:
+            - /url: /business/finance/iran-rejects-idea-using-its-assets-pay-damages-us-allies-2026-06-07/
+            - generic [ref=e309]: Iran rejects idea of using its assets to pay damages to US allies
+          - figure [ref=e310]:
+            - link [ref=e311] [cursor=pointer]:
+              - /url: /business/finance/iran-rejects-idea-using-its-assets-pay-damages-us-allies-2026-06-07/
+        - listitem [ref=e314]:
+          - generic [ref=e315]:
+            - link "Business category" [ref=e317] [cursor=pointer]:
+              - /url: /business/
+              - text: Business
+              - generic [ref=e318]: category
+            - text: ·
+            - time [ref=e319]: 38 mins ago
+          - link "United Airlines CEO says big merger unlikely after American rebuff, asset buys possible" [ref=e321] [cursor=pointer]:
+            - /url: /business/united-airlines-ceo-says-big-merger-unlikely-after-american-rebuff-asset-buys-2026-06-07/
+            - generic [ref=e322]: United Airlines CEO says big merger unlikely after American rebuff, asset buys possible
+          - figure [ref=e323]:
+            - link [ref=e324] [cursor=pointer]:
+              - /url: /business/united-airlines-ceo-says-big-merger-unlikely-after-american-rebuff-asset-buys-2026-06-07/
+        - listitem [ref=e327]:
+          - generic [ref=e328]:
+            - link "Sports category" [ref=e330] [cursor=pointer]:
+              - /url: /sports/
+              - text: Sports
+              - generic [ref=e331]: category
+            - text: ·
+            - time [ref=e332]: 12 hours ago
+          - link "England romp to victory in first test against New Zealand, includes gallery" [ref=e334] [cursor=pointer]:
+            - /url: /sports/cricket/england-seal-115-run-win-lords-rain-hit-test-against-new-zealand-2026-06-07/
+            - generic [ref=e335]: England romp to victory in first test against New Zealand
+          - figure [ref=e336]:
+            - link [ref=e337] [cursor=pointer]:
+              - /url: /sports/cricket/england-seal-115-run-win-lords-rain-hit-test-against-new-zealand-2026-06-07/
+        - listitem [ref=e340]:
+          - generic [ref=e341]:
+            - link "Business category" [ref=e343] [cursor=pointer]:
+              - /url: /business/
+              - text: Business
+              - generic [ref=e344]: category
+            - text: ·
+            - time [ref=e345]: 12 hours ago
+          - link "Copa Airlines sticks to no-hedge stance as fuel shock tests airlines" [ref=e347] [cursor=pointer]:
+            - /url: /business/energy/copa-airlines-sticks-no-hedge-stance-fuel-shock-tests-airlines-ceo-says-2026-06-07/
+            - generic [ref=e348]: Copa Airlines sticks to no-hedge stance as fuel shock tests airlines
+          - figure [ref=e349]:
+            - link [ref=e350] [cursor=pointer]:
+              - /url: /business/energy/copa-airlines-sticks-no-hedge-stance-fuel-shock-tests-airlines-ceo-says-2026-06-07/
+        - listitem [ref=e353]:
+          - generic [ref=e354]:
+            - link "World category" [ref=e356] [cursor=pointer]:
+              - /url: /world/
+              - text: World
+              - generic [ref=e357]: category
+            - text: ·
+            - time [ref=e358]: 11 hours ago
+          - link "US draft resolution at IAEA demands Iran open up on sites, uranium stocks" [ref=e360] [cursor=pointer]:
+            - /url: /world/middle-east/us-resolution-text-iaea-demands-iran-open-up-sites-uranium-stocks-2026-06-07/
+            - generic [ref=e361]: US draft resolution at IAEA demands Iran open up on sites, uranium stocks
+          - figure [ref=e362]:
+            - link [ref=e363] [cursor=pointer]:
+              - /url: /world/middle-east/us-resolution-text-iaea-demands-iran-open-up-sites-uranium-stocks-2026-06-07/
+        - listitem [ref=e366]:
+          - time [ref=e368]: 13 hours ago
+          - link "OPEC+ to make small oil output quota hike for July" [ref=e370] [cursor=pointer]:
+            - /url: /business/energy/opec-make-small-oil-output-quota-hike-july-2026-06-07/
+            - generic [ref=e371]: OPEC+ to make small oil output quota hike for July
+          - figure [ref=e372]:
+            - link [ref=e373] [cursor=pointer]:
+              - /url: /business/energy/opec-make-small-oil-output-quota-hike-july-2026-06-07/
+        - listitem [ref=e376]:
+          - time [ref=e378]: 14 hours ago
+          - link "Quakes rattle Greek island near Athens, no injuries reported" [ref=e380] [cursor=pointer]:
+            - /url: /business/environment/quakes-rattle-greek-island-near-athens-no-injuries-reported-2026-06-07/
+            - generic [ref=e381]: Quakes rattle Greek island near Athens, no injuries reported
+          - figure [ref=e382]:
+            - link [ref=e383] [cursor=pointer]:
+              - /url: /business/environment/quakes-rattle-greek-island-near-athens-no-injuries-reported-2026-06-07/
+        - listitem [ref=e386]:
+          - generic [ref=e387]:
+            - link "World category" [ref=e389] [cursor=pointer]:
+              - /url: /world/
+              - text: World
+              - generic [ref=e390]: category
+            - text: ·
+            - time [ref=e391]: 1 hour ago
+          - link "Peru's Fujimori leading presidential runoff election, early results show, includes gallery" [ref=e393] [cursor=pointer]:
+            - /url: /world/americas/peru-votes-tight-presidential-run-off-test-latin-americas-rightward-shift-2026-06-07/
+            - generic [ref=e394]: Peru's Fujimori leading presidential runoff election, early results show
+          - figure [ref=e395]:
+            - link [ref=e396] [cursor=pointer]:
+              - /url: /world/americas/peru-votes-tight-presidential-run-off-test-latin-americas-rightward-shift-2026-06-07/
+      - button "Load more articles" [ref=e400] [cursor=pointer]:
+        - generic [ref=e402]: Load more articles
+  - contentinfo [ref=e404]:
+    - generic [ref=e405]:
+      - heading "Site Index" [level=3] [ref=e406]
+      - generic [ref=e407]:
+        - generic [ref=e408]:
+          - generic [ref=e409]:
+            - heading "Latest" [level=3] [ref=e410]
+            - list [ref=e411]:
+              - listitem [ref=e412]:
+                - link "Home" [ref=e413] [cursor=pointer]:
+                  - /url: /
+                  - generic [ref=e414]: Home
+              - listitem [ref=e415]:
+                - link "Authors" [ref=e416] [cursor=pointer]:
+                  - /url: /sitemap/authors/
+                  - generic [ref=e417]: Authors
+              - listitem [ref=e418]:
+                - link "Topic Sitemap" [ref=e419] [cursor=pointer]:
+                  - /url: /sitemap/topics/
+                  - generic [ref=e420]: Topic Sitemap
+              - listitem [ref=e421]:
+                - link "Archive" [ref=e422] [cursor=pointer]:
+                  - /url: /archive/
+                  - generic [ref=e423]: Archive
+              - listitem [ref=e424]:
+                - link "Article Sitemap" [ref=e425] [cursor=pointer]:
+                  - /url: /sitemap/
+                  - generic [ref=e426]: Article Sitemap
+          - generic [ref=e427]:
+            - heading "Media" [level=3] [ref=e428]
+            - list [ref=e429]:
+              - listitem [ref=e430]:
+                - img [ref=e432]
+                - link "Videos" [ref=e434] [cursor=pointer]:
+                  - /url: https://www.reuters.com/video/
+                  - generic [ref=e435]: Videos
+              - listitem [ref=e436]:
+                - img [ref=e438]
+                - link "Pictures" [ref=e440] [cursor=pointer]:
+                  - /url: https://www.reuters.com/pictures/
+                  - generic [ref=e441]: Pictures
+              - listitem [ref=e442]:
+                - img [ref=e444]
+                - link "Graphics" [ref=e446] [cursor=pointer]:
+                  - /url: https://www.reuters.com/graphics/
+                  - generic [ref=e447]: Graphics
+              - listitem [ref=e448]:
+                - img [ref=e450]
+                - link "Podcasts" [ref=e452] [cursor=pointer]:
+                  - /url: https://www.reuters.com/podcasts/
+                  - generic [ref=e453]: Podcasts
+        - generic [ref=e454]:
+          - heading "Browse" [level=3] [ref=e455]
+          - list [ref=e456]:
+            - listitem [ref=e457]:
+              - link "World" [ref=e458] [cursor=pointer]:
+                - /url: /world/
+                - generic [ref=e459]: World
+            - listitem [ref=e460]:
+              - link "Business" [ref=e461] [cursor=pointer]:
+                - /url: /business/
+                - generic [ref=e462]: Business
+            - listitem [ref=e463]:
+              - link "Markets" [ref=e464] [cursor=pointer]:
+                - /url: /markets/
+                - generic [ref=e465]: Markets
+            - listitem [ref=e466]:
+              - link "Sustainability" [ref=e467] [cursor=pointer]:
+                - /url: /sustainability/
+                - generic [ref=e468]: Sustainability
+            - listitem [ref=e469]:
+              - link "Legal" [ref=e470] [cursor=pointer]:
+                - /url: /legal/
+                - generic [ref=e471]: Legal
+            - listitem [ref=e472]:
+              - link "Breakingviews" [ref=e473] [cursor=pointer]:
+                - /url: /breakingviews/
+                - generic [ref=e474]: Breakingviews
+            - listitem [ref=e475]:
+              - link "Technology" [ref=e476] [cursor=pointer]:
+                - /url: /technology/
+                - generic [ref=e477]: Technology
+            - listitem [ref=e478]:
+              - link "Investigations" [ref=e479] [cursor=pointer]:
+                - /url: /investigates/
+                - generic [ref=e480]: Investigations
+            - listitem [ref=e481]:
+              - link "Sports" [ref=e482] [cursor=pointer]:
+                - /url: /sports/
+                - generic [ref=e483]: Sports
+            - listitem [ref=e484]:
+              - link "Science" [ref=e485] [cursor=pointer]:
+                - /url: /science/
+                - generic [ref=e486]: Science
+            - listitem [ref=e487]:
+              - link "Lifestyle" [ref=e488] [cursor=pointer]:
+                - /url: /lifestyle/
+                - generic [ref=e489]: Lifestyle
+        - generic [ref=e490]:
+          - generic [ref=e491]:
+            - heading "About Reuters" [level=3] [ref=e492]
+            - list [ref=e493]:
+              - listitem [ref=e494]:
+                - link "About Reuters , opens new tab" [ref=e495] [cursor=pointer]:
+                  - /url: https://reutersagency.com/about/
+                  - generic [ref=e496]: About Reuters
+                  - img [ref=e497]
+                  - generic [ref=e499]: ", opens new tab"
+              - listitem [ref=e500]:
+                - link "Media Center , opens new tab" [ref=e501] [cursor=pointer]:
+                  - /url: /media-center/
+                  - generic [ref=e502]: Media Center
+                  - img [ref=e503]
+                  - generic [ref=e505]: ", opens new tab"
+              - listitem [ref=e506]:
+                - link "Advertise with Us , opens new tab" [ref=e507] [cursor=pointer]:
+                  - /url: https://www.reutersprofessional.com/advertise-with-us/p/1
+                  - generic [ref=e508]: Advertise with Us
+                  - img [ref=e509]
+                  - generic [ref=e511]: ", opens new tab"
+              - listitem [ref=e512]:
+                - link "Careers , opens new tab" [ref=e513] [cursor=pointer]:
+                  - /url: https://www.thomsonreuters.com/en/careers.html
+                  - generic [ref=e514]: Careers
+                  - img [ref=e515]
+                  - generic [ref=e517]: ", opens new tab"
+              - listitem [ref=e518]:
+                - link "Reuters News Agency , opens new tab" [ref=e519] [cursor=pointer]:
+                  - /url: https://www.reutersagency.com/en/?utm_source=website&utm_medium=reuters&utm_campaign=site-referral&utm_content=us&utm_term=0
+                  - generic [ref=e520]: Reuters News Agency
+                  - img [ref=e521]
+                  - generic [ref=e523]: ", opens new tab"
+              - listitem [ref=e524]:
+                - link "Brand Attribution Guidelines , opens new tab" [ref=e525] [cursor=pointer]:
+                  - /url: https://www.reutersagency.com/en/brand-attribution-guidelines/
+                  - generic [ref=e526]: Brand Attribution Guidelines
+                  - img [ref=e527]
+                  - generic [ref=e529]: ", opens new tab"
+              - listitem [ref=e530]:
+                - link "Reuters and AI , opens new tab" [ref=e531] [cursor=pointer]:
+                  - /url: /info-pages/reuters-and-ai/
+                  - generic [ref=e532]: Reuters and AI
+                  - img [ref=e533]
+                  - generic [ref=e535]: ", opens new tab"
+              - listitem [ref=e536]:
+                - link "Reuters Leadership , opens new tab" [ref=e537] [cursor=pointer]:
+                  - /url: https://www.reutersagency.com/en/about/leadership-team/
+                  - generic [ref=e538]: Reuters Leadership
+                  - img [ref=e539]
+                  - generic [ref=e541]: ", opens new tab"
+              - listitem [ref=e542]:
+                - link "Reuters Fact Check" [ref=e543] [cursor=pointer]:
+                  - /url: /fact-check/
+                  - generic [ref=e544]: Reuters Fact Check
+              - listitem [ref=e545]:
+                - link "Reuters Diversity Report , opens new tab" [ref=e546] [cursor=pointer]:
+                  - /url: https://www.reuters.com/graphics/DIVERSITY-REPORT/2024/xmpjbgdrapr/
+                  - generic [ref=e547]: Reuters Diversity Report
+                  - img [ref=e548]
+                  - generic [ref=e550]: ", opens new tab"
+              - listitem [ref=e551]:
+                - link "Commercial Disclosure (Japan) , opens new tab" [ref=e552] [cursor=pointer]:
+                  - /url: https://www.reuters.com/info-pages/commercial-disclosure/
+                  - generic [ref=e553]: Commercial Disclosure (Japan)
+                  - img [ref=e554]
+                  - generic [ref=e556]: ", opens new tab"
+          - generic [ref=e557]:
+            - heading "Stay Informed" [level=3] [ref=e558]
+            - list [ref=e559]:
+              - listitem [ref=e560]:
+                - link "Download the App (iOS) , opens new tab" [ref=e561] [cursor=pointer]:
+                  - /url: https://apps.apple.com/app/reuters-news/id602660809
+                  - generic [ref=e562]: Download the App (iOS)
+                  - img [ref=e563]
+                  - generic [ref=e565]: ", opens new tab"
+              - listitem [ref=e566]:
+                - link "Download the App (Android) , opens new tab" [ref=e567] [cursor=pointer]:
+                  - /url: https://play.google.com/store/apps/details?id=com.thomsonreuters.reuters
+                  - generic [ref=e568]: Download the App (Android)
+                  - img [ref=e569]
+                  - generic [ref=e571]: ", opens new tab"
+              - listitem [ref=e572]:
+                - link "Newsletters" [ref=e573] [cursor=pointer]:
+                  - /url: https://reuters.com/newsletters/
+                  - generic [ref=e574]: Newsletters
+              - listitem [ref=e575]:
+                - button "Subscribe" [ref=e576] [cursor=pointer]
+    - generic [ref=e578]:
+      - generic [ref=e579]:
+        - heading "Information you can trust" [level=3] [ref=e580]
+        - paragraph [ref=e581]: Reuters, the news and media division of Thomson Reuters, is the world’s largest multimedia news provider, reaching billions of people worldwide every day. Reuters provides business, financial, national and international news to professionals via desktop terminals, the world's media organizations, industry events and directly to consumers.
+      - generic [ref=e582]:
+        - heading "Follow Us" [level=3] [ref=e583]
+        - list "Social media links" [ref=e585]:
+          - listitem [ref=e586]:
+            - link "Visit Reuters on X" [ref=e587] [cursor=pointer]:
+              - /url: https://x.com/reuters
+              - img [ref=e590]
+          - listitem [ref=e592]:
+            - link "Visit Reuters on facebook" [ref=e593] [cursor=pointer]:
+              - /url: https://www.facebook.com/Reuters
+              - img [ref=e596]
+          - listitem [ref=e598]:
+            - link "Visit Reuters on instagram" [ref=e599] [cursor=pointer]:
+              - /url: https://www.instagram.com/Reuters
+              - img [ref=e602]
+          - listitem [ref=e605]:
+            - link "Visit Reuters on youtube" [ref=e606] [cursor=pointer]:
+              - /url: https://www.youtube.com/user/ReutersVideo
+              - img [ref=e609]
+          - listitem [ref=e611]:
+            - link "Visit Reuters on linkedin" [ref=e612] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/10256858/
+              - img [ref=e615]
+          - listitem [ref=e617]:
+            - link "Visit Reuters on whatsapp" [ref=e618] [cursor=pointer]:
+              - /url: https://www.whatsapp.com/channel/0029Va993qu5q08m6Tl6jP0U
+              - img [ref=e621]
+    - generic [ref=e628]:
+      - heading "LSEG Products" [level=3] [ref=e629]
+      - list [ref=e630]:
+        - listitem [ref=e631]:
+          - heading "Workspace , opens new tab Access unmatched financial data, news and content in a highly-customised workflow experience on desktop, web and mobile." [level=4] [ref=e632]:
+            - generic [ref=e633]:
+              - link "Workspace , opens new tab" [ref=e634] [cursor=pointer]:
+                - /url: https://www.lseg.com/en/data-analytics/products/workspace?utm_source=reuters.com&utm_medium=footer&utm_campaign=Reuters_ProductPage_Links
+                - generic [ref=e635]:
+                  - text: Workspace
+                  - img [ref=e636]
+                  - generic [ref=e638]: ", opens new tab"
+              - paragraph [ref=e639]: Access unmatched financial data, news and content in a highly-customised workflow experience on desktop, web and mobile.
+        - listitem [ref=e640]:
+          - heading "Data Catalogue , opens new tab Browse an unrivalled portfolio of real-time and historical market data and insights from worldwide sources and experts." [level=4] [ref=e641]:
+            - generic [ref=e642]:
+              - link "Data Catalogue , opens new tab" [ref=e643] [cursor=pointer]:
+                - /url: https://www.lseg.com/en/data-analytics/financial-data/?utm_source=reuters.com&utm_medium=footer&utm_campaign=Reuters_DataCatalogPage_Links
+                - text: Data
+                - generic [ref=e644]:
+                  - text: Catalogue
+                  - img [ref=e645]
+                  - generic [ref=e647]: ", opens new tab"
+              - paragraph [ref=e648]: Browse an unrivalled portfolio of real-time and historical market data and insights from worldwide sources and experts.
+        - listitem [ref=e649]:
+          - heading "World-Check , opens new tab Screen for heightened risk individual and entities globally to help uncover hidden risks in business relationships and human networks." [level=4] [ref=e650]:
+            - generic [ref=e651]:
+              - link "World-Check , opens new tab" [ref=e652] [cursor=pointer]:
+                - /url: https://www.lseg.com/en/risk-intelligence/screening-solutions/world-check-kyc-screening?utm_source=reuters.com&utm_medium=footer&utm_campaign=Reuters_ProductPage_Links
+                - generic [ref=e653]:
+                  - text: World-Check
+                  - img [ref=e654]
+                  - generic [ref=e656]: ", opens new tab"
+              - paragraph [ref=e657]: Screen for heightened risk individual and entities globally to help uncover hidden risks in business relationships and human networks.
+    - generic [ref=e659]:
+      - list [ref=e661]:
+        - listitem [ref=e662]:
+          - link "Advertise With Us , opens new tab" [ref=e663] [cursor=pointer]:
+            - /url: https://www.reutersagency.com/en/services/advertising-solutions/
+            - generic [ref=e664]: Advertise With Us
+            - img [ref=e665]
+            - generic [ref=e667]: ", opens new tab"
+        - listitem [ref=e668]:
+          - link "Advertising Guidelines" [ref=e669] [cursor=pointer]:
+            - /url: /info-pages/advertising-guidelines/
+            - generic [ref=e670]: Advertising Guidelines
+        - listitem [ref=e671]:
+          - link "Purchase Licensing Rights , opens new tab" [ref=e672] [cursor=pointer]:
+            - /url: https://www.reutersagency.com/en/licensereuterscontent/?utm_medium=rcom-footer&utm_campaign=rcom-rcp-lead
+            - generic [ref=e673]: Purchase Licensing Rights
+            - img [ref=e674]
+            - generic [ref=e676]: ", opens new tab"
+      - paragraph [ref=e677]:
+        - text: All quotes delayed a minimum of 15 minutes.
+        - link "See here for a list of exchanges and delays." [ref=e678] [cursor=pointer]:
+          - /url: https://www.reuters.com/info-pages/disclaimer/
+      - list [ref=e681]:
+        - listitem [ref=e682]:
+          - link "Cookies , opens new tab" [ref=e683] [cursor=pointer]:
+            - /url: https://www.thomsonreuters.com/en/privacy-statement.html#cookies
+            - generic [ref=e684]: Cookies
+            - img [ref=e685]
+            - generic [ref=e687]: ", opens new tab"
+        - listitem [ref=e688]:
+          - link "Terms & Conditions" [ref=e689] [cursor=pointer]:
+            - /url: /info-pages/terms-of-use/
+            - generic [ref=e690]: Terms & Conditions
+        - listitem [ref=e691]:
+          - link "Privacy , opens new tab" [ref=e692] [cursor=pointer]:
+            - /url: https://www.thomsonreuters.com/en/privacy-statement.html
+            - generic [ref=e693]: Privacy
+            - img [ref=e694]
+            - generic [ref=e696]: ", opens new tab"
+        - listitem [ref=e697]:
+          - link "Copyright , opens new tab" [ref=e698] [cursor=pointer]:
+            - /url: https://www.thomsonreuters.com/en/policies/copyright
+            - generic [ref=e699]: Copyright
+            - img [ref=e700]
+            - generic [ref=e702]: ", opens new tab"
+        - listitem [ref=e703]:
+          - link "Digital Accessibility , opens new tab" [ref=e704] [cursor=pointer]:
+            - /url: https://www.thomsonreuters.com/en/policies/digital-accessibility-policy.html
+            - generic [ref=e705]: Digital Accessibility
+            - img [ref=e706]
+            - generic [ref=e708]: ", opens new tab"
+        - listitem [ref=e709]:
+          - link "Corrections" [ref=e710] [cursor=pointer]:
+            - /url: /info-pages/contact-us/
+            - generic [ref=e711]: Corrections
+        - listitem [ref=e712]:
+          - link "Data Disclosure and Sources , opens new tab" [ref=e713] [cursor=pointer]:
+            - /url: /info-pages/data-disclosure-and-sources/
+            - generic [ref=e714]: Data Disclosure and Sources
+            - img [ref=e715]
+            - generic [ref=e717]: ", opens new tab"
+        - listitem [ref=e718]:
+          - link "Site Feedback , opens new tab" [ref=e719] [cursor=pointer]:
+            - /url: https://trdigital.iad1.qualtrics.com/jfe/form/SV_8kte8gArGyCGVhz
+            - generic [ref=e720]: Site Feedback
+            - img [ref=e721]
+            - generic [ref=e723]: ", opens new tab"
+        - listitem [ref=e724]:
+          - link "Commercial Disclosure (Japan) , opens new tab" [ref=e725] [cursor=pointer]:
+            - /url: https://www.reuters.com/info-pages/commercial-disclosure/
+            - generic [ref=e726]: Commercial Disclosure (Japan)
+            - img [ref=e727]
+            - generic [ref=e729]: ", opens new tab"
+      - paragraph [ref=e730]:
+        - text: © 2026 Reuters.
+        - link "All rights reserved" [ref=e731] [cursor=pointer]:
+          - /url: https://www.thomsonreuters.com/en/policies/copyright.html

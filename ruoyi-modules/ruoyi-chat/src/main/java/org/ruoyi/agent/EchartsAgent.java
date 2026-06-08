@@ -84,6 +84,6 @@ public interface EchartsAgent {
 
         IMPORTANT: Return the Echarts configuration JSON wrapped in markdown code block (```json...```).
         """)
-    @Agent("Data visualization assistant that returns Echarts JSON configurations for frontend rendering")
+    @Agent(name = "echarts", description = "Data visualization assistant that returns Echarts JSON configurations for frontend rendering")
     String search(@V("query") String query);
 }

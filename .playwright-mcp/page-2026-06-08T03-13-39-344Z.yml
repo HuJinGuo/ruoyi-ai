@@ -1,0 +1,343 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "跳至内容" [ref=e3] [cursor=pointer]:
+      - generic [ref=e5]: 跳至内容
+    - button "辅助功能反馈" [ref=e6] [cursor=pointer]:
+      - generic [ref=e8]: 辅助功能反馈
+    - generic [ref=e9]:
+      - link "返回到必应搜索" [ref=e10] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=e11]
+      - search [ref=e12]:
+        - button "搜索" [ref=e15] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=e16]: 今日无锡天气
+        - button "使用图像搜索" [ref=e22] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=e24]:
+      - button "Microsoft Rewards" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Rewards
+          - img [ref=e30]
+      - link "登录" [ref=e42] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - generic "登录" [ref=e43]
+    - navigation "主菜单" [ref=e44]:
+      - list [ref=e45]:
+        - listitem [ref=e46]:
+          - link "全部" [ref=e47] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=e48]:
+          - link "搜索" [ref=e49] [cursor=pointer]:
+            - /url: /copilotsearch?q=%e4%bb%8a%e6%97%a5%e6%97%a0%e9%94%a1%e5%a4%a9%e6%b0%94&FORM=CSSCOP
+            - img [ref=e50]
+            - text: 搜索
+        - listitem [ref=e52]:
+          - link "资讯" [ref=e53] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=0210f3d12c80bec7d46ff6df072a4510a62a46b095cf175e05a6ce35152c66d2JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L25ld3Mvc2VhcmNoP3E9JWU0JWJiJThhJWU2JTk3JWE1JWU2JTk3JWEwJWU5JTk0JWExJWU1JWE0JWE5JWU2JWIwJTk0JkZPUk09SERSU0M3&ntb=1
+        - listitem [ref=e54]:
+          - link "图片" [ref=e55] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=b6682d4bc68448a3bb9319949c95fea5e76ce2aa97d6cb38f73a37b6510912e5JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L2ltYWdlcy9zZWFyY2g_cT0lZTQlYmIlOGElZTYlOTclYTUlZTYlOTclYTAlZTklOTQlYTElZTUlYTQlYTklZTYlYjAlOTQmRk9STT1IRFJTQzM&ntb=1
+        - listitem [ref=e56]:
+          - link "视频" [ref=e57] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=4c30f79972527c29f1323f0584178459bb3970cbf7f93674fb85314030ae4882JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3ZpZGVvcy9zZWFyY2g_cT0lZTQlYmIlOGElZTYlOTclYTUlZTYlOTclYTAlZTklOTQlYTElZTUlYTQlYTklZTYlYjAlOTQmRk9STT1IRFJTQzQ&ntb=1
+        - listitem [ref=e58]:
+          - link "地图" [ref=e59] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=3af40d528ce3b11f50cca24277a03bbb7137a9f318bde77c4cef9b33ddf27522JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L21hcHM_cT0lZTQlYmIlOGElZTYlOTclYTUlZTYlOTclYTAlZTklOTQlYTElZTUlYTQlYTklZTYlYjAlOTQmRk9STT1IRFJTQzY&ntb=1
+        - listitem [ref=e60]:
+          - link "Copilot" [ref=e61] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=69671e244815dba339153b360070845bd7f0e2a35241b98a7cf670e7b790e576JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L2NoYXQ_cHJvbXB0PSVlNCViYiU4YSVlNiU5NyVhNSVlNiU5NyVhMCVlOSU5NCVhMSVlNSVhNCVhOSVlNiViMCU5NCZzZW5kcXVlcnk9MSZGT1JNPVNDQ09EWA&ntb=1
+        - listitem [ref=e62]:
+          - button "更多" [ref=e63] [cursor=pointer]:
+            - img [ref=e65]
+            - text: 更多
+  - main "搜索结果" [ref=e68]:
+    - generic [ref=e69]:
+      - list [ref=e70]:
+        - listitem [ref=e71]:
+          - region "Copilot 搜索" [ref=e74]:
+            - list [ref=e81]:
+              - listitem [ref=e82]:
+                - generic [ref=e83]:
+                  - link "中国天气网" [ref=e85] [cursor=pointer]:
+                    - /url: https://www.bing.com/ck/a?!&&p=73ce70387af665b8f943e25bab2d3e8f076384789eda67ff856b752e7504f89bJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci5jb20uY24vd2VhdGhlci8xMDExOTAyMDEuc2h0bWw&ntb=1
+                    - generic [ref=e90]:
+                      - generic [ref=e91]: 中国天气网
+                      - generic [ref=e93]: https://www.weather.com.cn › weather
+                  - heading "无锡天气预报,无锡7天天气预报,无锡15天天气预报,无锡天气查询" [level=2] [ref=e94]:
+                    - link "无锡天气预报,无锡7天天气预报,无锡15天天气预报,无锡天气查询" [ref=e95] [cursor=pointer]:
+                      - /url: https://www.bing.com/ck/a?!&&p=73ce70387af665b8f943e25bab2d3e8f076384789eda67ff856b752e7504f89bJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci5jb20uY24vd2VhdGhlci8xMDExOTAyMDEuc2h0bWw&ntb=1
+                  - list [ref=e96]:
+                    - listitem [ref=e97]:
+                      - generic [ref=e98]:
+                        - link "南方降雨显著减弱 北方炎热持续多地或现高温 未来三天（5月30日至6月1日），我国大部地区将以晴到多云的天气为主，适宜出行，但华南、云南的部分地区仍有雨水叨扰，公众外出 …" [ref=e100] [cursor=pointer]:
+                          - /url: https://www.bing.com/ck/a?!&&p=73ce70387af665b8f943e25bab2d3e8f076384789eda67ff856b752e7504f89bJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci5jb20uY24vd2VhdGhlci8xMDExOTAyMDEuc2h0bWw&ntb=1
+                          - text: 南方降雨显著减弱 北方炎热持续多地或现高温 未来三天（5月30日至6月1日），我国大部地区将以晴到多云的
+                          - strong [ref=e101]: 天气
+                          - text: 为主，适宜出行，但华南、云南的部分地区仍有雨水叨扰，公众外出 …
+                        - generic [ref=e102]:
+                          - generic [ref=e103]:
+                            - link "40天" [ref=e104] [cursor=pointer]:
+                              - /url: https://www.bing.com/ck/a?!&&p=73c9941e52414fe443c9565b4817fe2a28ef6caaee446b33b82c536a341a6e09JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci5jb20uY24vd2VhdGhlcjQwZC8xMDExOTAyMDEuc2h0bWw&ntb=1
+                              - generic [ref=e105]: 40天
+                            - generic [ref=e106]: 无锡天气预报，及时准确发布中央气象台天气信息，便捷查询无锡今日天气，无锡周末天 …
+                          - generic [ref=e107]:
+                            - link "今天" [ref=e108] [cursor=pointer]:
+                              - /url: https://www.bing.com/ck/a?!&&p=15423bcc3e3163b705f62638bf2f50f5410cf72b622468bd1b40bda3d242b8e5JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci5jb20uY24vd2VhdGhlcjFkLzEwMTE5MDIwMS5zaHRtbA&ntb=1
+                              - generic [ref=e109]: 今天
+                            - generic [ref=e110]: 无锡天气预报，及时准确发布中央气象台天气信息，便捷查询北京今日天气，无锡周末天 …
+                          - generic [ref=e111]:
+                            - link "无锡天气" [ref=e112] [cursor=pointer]:
+                              - /url: https://www.bing.com/ck/a?!&&p=f75e0a174592669f5f7360bc688425dea350cb269d90b79bfa1c483751675897JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci5jb20uY24vaHRtbC93ZWF0aGVyX3Rlc3Qvd2VhdGhlci8xMDExOTAyMDEuc2h0bWw&ntb=1
+                              - generic [ref=e113]: 无锡天气
+                            - generic [ref=e114]: 无锡天气预报，及时准确发布中央气象台天气信息，便捷查询无锡今日天气，无锡周末天 …
+                          - generic [ref=e115]:
+                            - link "专业产品-中国天气网" [ref=e116] [cursor=pointer]:
+                              - /url: https://www.bing.com/ck/a?!&&p=c398685fa78ee949bbbafc5e076eec0d8959c3f9cbe2be2ac623b410197b93cbJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL3Byb2R1Y3RzLndlYXRoZXIuY29tLmNuL3NrLmh0bWw_cGFnZT1ZQiZ0eXBlPVlCX0pTTF8wMjQ&ntb=1
+                              - generic [ref=e117]: 专业产品-中国天气网
+                            - generic [ref=e118]: 中国天气网官方权威发布天气预报,逐三小时天气预报,提供天气预报查询一周,天气预报15 …
+              - listitem [ref=e119]:
+                - generic [ref=e122]:
+                  - link "【无锡24小时天气查询】_无锡今日逐小时天气预报查询_2345天气预报" [ref=e123] [cursor=pointer]:
+                    - /url: https://www.bing.com/ck/a?!&&p=789ae603df06426da9ade4a13064ad3640dbabc1f0881b97adef950b470a1eeeJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuMjM0NS5jb20vdG9kYXktNTgzNTQuaHRt&ntb=1
+                  - generic [ref=e124]:
+                    - generic [ref=e125]:
+                      - heading "【无锡24小时天气查询】_无锡今日逐小时天气预报查询_2345天气预报" [level=2] [ref=e127]
+                      - paragraph [ref=e128]:
+                        - text: 手机看
+                        - strong [ref=e129]: 天气
+                        - text: 现在 东北风 3级 优 03:00 东北风 3级 优 04:00 东北风 3级 优 05:00 东北风 3级 优 06:00 东北风 3级 优 07:00 东北风 3级 优 08:00 东北风 3级 优 09:00 东北 …
+                    - generic [ref=e133]: 2345天气王
+                - generic [ref=e136]:
+                  - link "无锡-天气预报" [ref=e137] [cursor=pointer]:
+                    - /url: https://www.bing.com/ck/a?!&&p=794da9fd4500c43f2a9a2bff27406c24b0d7ebb157c678f084a313e37102e1ceJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL3d3dy5ubWMuY24vcHVibGlzaC9mb3JlY2FzdC9BSlMvd3V4aS5odG1s&ntb=1
+                  - generic [ref=e138]:
+                    - generic [ref=e139]:
+                      - heading "无锡-天气预报" [level=2] [ref=e141]
+                      - paragraph [ref=e142]:
+                        - strong [ref=e143]: 无锡
+                        - text: 日落 降水量 相对湿度 体感温度 雷达图 24小时预报 7天预报 10天预报 11-30天预报 发布时间：06-07 12:00 06/07 周日 多云 东北风 微风 30℃ 21℃ 多云 东北风 3~4级 06/08 周一 阴 东北风 微风 25℃ 19℃ 阴 …
+                    - generic [ref=e147]: 中国气象局
+              - listitem [ref=e148]:
+                - generic [ref=e151]:
+                  - link "无锡天气预报15天_无锡天气预报15天查询, …" [ref=e152] [cursor=pointer]:
+                    - /url: https://www.bing.com/ck/a?!&&p=a02dc0dbe30bc4feb530ab994f6342b4b78d662dac88fbb45591c3cc0edb9db8JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cudGlhbnFpLmNvbS93dXhpMS8xNS8&ntb=1
+                  - generic [ref=e153]:
+                    - generic [ref=e154]:
+                      - heading "无锡天气预报15天_无锡天气预报15天查询, …" [level=2] [ref=e156]
+                      - paragraph [ref=e157]:
+                        - strong [ref=e158]: 无锡天气
+                        - text: 网提供
+                        - strong [ref=e159]: 无锡天气预报
+                        - text: 15天，
+                        - strong [ref=e160]: 无锡天气预报
+                        - text: 15天查询，无锡未来15天
+                        - strong [ref=e161]: 天气预报
+                        - text: ，通过
+                        - strong [ref=e162]: 无锡
+                        - text: …
+                    - generic [ref=e166]: 天气网
+                - generic [ref=e168]:
+                  - heading "相关搜索" [level=2] [ref=e170]
+                  - list [ref=e172]:
+                    - listitem [ref=e173]:
+                      - link "无锡一周天气预报15天" [ref=e174] [cursor=pointer]:
+                        - /url: https://www.bing.com/ck/a?!&&p=a5c994dfef474271a19ac4cc3a50d13b50651944cbb194ef251760eedc81f594JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMSVlNCViOCU4MCVlNSU5MSVhOCVlNSVhNCVhOSVlNiViMCU5NCVlOSVhMiU4NCVlNiU4YSVhNTE1JWU1JWE0JWE5JkZPUk09UlNNQUcw&ntb=1
+                        - generic [ref=e178]: 无锡一周天气预报15天
+                    - listitem [ref=e179]:
+                      - link "无锡空气湿度" [ref=e180] [cursor=pointer]:
+                        - /url: https://www.bing.com/ck/a?!&&p=09fb715b29fb406eaae89dc2eeb57564cfadd6b94e3132a464fe68aa4a00d8ceJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMSVlNyVhOSViYSVlNiViMCU5NCVlNiViOSViZiVlNSViYSVhNiZGT1JNPVJTTUFHMQ&ntb=1
+                        - generic [ref=e184]: 无锡空气湿度
+                    - listitem [ref=e185]:
+                      - link "天气 无锡 文林" [ref=e186] [cursor=pointer]:
+                        - /url: https://www.bing.com/ck/a?!&&p=63361d96fa340db26f9c83a22b032cc18c0eafde067ebeadcedddba042efbb62JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNSVhNCVhOSVlNiViMCU5NCslZTYlOTclYTAlZTklOTQlYTErJWU2JTk2JTg3JWU2JTllJTk3JkZPUk09UlNNQUcy&ntb=1
+                        - generic [ref=e190]: 天气 无锡 文林
+                    - listitem [ref=e191]:
+                      - link "Wuxi weather" [ref=e192] [cursor=pointer]:
+                        - /url: https://www.bing.com/ck/a?!&&p=0c43b6b24edf05059cde5299c5b9681fe99c68f2e0155ecfb7a93c5ecdb7efdcJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPXd1eGkrd2VhdGhlciZGT1JNPVJTTUFHMw&ntb=1
+                        - generic [ref=e196]: Wuxi weather
+      - list [ref=e198]:
+        - listitem [ref=e199]:
+          - generic [ref=e200]:
+            - generic [ref=e202]:
+              - generic [ref=e204]:
+                - link "今日无锡天气的最新相关信息" [ref=e206] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=542b2ffac7bb000dbe1cb16e4408ed89f61ff31668b83472390ab8704563e30cJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L25ld3Mvc2VhcmNoP3E9JWU0JWJiJThhJWU2JTk3JWE1JWU2JTk3JWEwJWU5JTk0JWExJWU1JWE0JWE5JWU2JWIwJTk0JkZPUk09RVdSRQ&ntb=1
+                  - heading "今日无锡天气的最新相关信息" [level=2] [ref=e207]
+                  - generic:
+                    - img
+                - generic [ref=e212]:
+                  - link "腾讯网 腾讯网 · 7 天 无锡后天升温至33℃！晴朗转阴雨，出行记得带伞 无锡近三天以晴朗天气为主，6月3日转为阴天有小雨，最高气温呈上升趋势，从31℃升至33℃，最低气温变化不大，维持在21-24℃。6月1日空气质量为优，6月2日空气质量为轻度污染，随后两天转优。 气温21~31℃，东风3-4级转1-3级。空气质量为优。今日晴朗，湿度较大。紫外线辐射强，建议做好防晒。 气温22~31℃，北风转东南风1-3级。空气质量为轻度污染。 气温24~33℃，西南风转西北风1-3 ..." [ref=e213] [cursor=pointer]:
+                    - /url: https://www.bing.com/ck/a?!&&p=ebd900090b81c58f37b7f0f9aa8c115bd3a12f9bb3d5b7bae4700d0d274266bfJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly92aWV3LmluZXdzLnFxLmNvbS9hLzIwMjYwNjAxQTAyNEI2MDA&ntb=1
+                    - generic [ref=e215]:
+                      - generic [ref=e217]:
+                        - img "腾讯网" [ref=e218]
+                        - generic "腾讯网" [ref=e219]: 腾讯网 · 7 天
+                      - generic [ref=e220]: 无锡后天升温至33℃！晴朗转阴雨，出行记得带伞
+                      - generic [ref=e221]: 无锡近三天以晴朗天气为主，6月3日转为阴天有小雨，最高气温呈上升趋势，从31℃升至33℃，最低气温变化不大，维持在21-24℃。6月1日空气质量为优，6月2日空气质量为轻度污染，随后两天转优。 气温21~31℃，东风3-4级转1-3级。空气质量为优。今日晴朗，湿度较大。紫外线辐射强，建议做好防晒。 气温22~31℃，北风转东南风1-3级。空气质量为轻度污染。 气温24~33℃，西南风转西北风1-3 ...
+                  - link "腾讯网":
+                    - /url: /news/search?q=site%3aview.inews.qq.com&FORM=NWBCLM
+              - generic [ref=e223]:
+                - generic [ref=e224]: 反馈
+                - button "反馈点赞" [ref=e225] [cursor=pointer]
+                - button "反馈不喜欢" [ref=e226] [cursor=pointer]
+            - link "查看更多相关资讯" [ref=e230] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=542b2ffac7bb000dbe1cb16e4408ed89f61ff31668b83472390ab8704563e30cJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L25ld3Mvc2VhcmNoP3E9JWU0JWJiJThhJWU2JTk3JWE1JWU2JTk3JWEwJWU5JTk0JWExJWU1JWE0JWE5JWU2JWIwJTk0JkZPUk09RVdSRQ&ntb=1
+              - generic [ref=e231]: 查看更多相关资讯
+              - generic:
+                - img
+        - listitem [ref=e233]:
+          - link "天气网" [ref=e235] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=f415c089fba48cab874dac789764b28a4c9300307286a2084438e0bec3a4e83aJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cudGlhbnFpLmNvbS93dXhpMS90b2RheS8&ntb=1
+            - generic [ref=e240]:
+              - generic [ref=e241]: 天气网
+              - generic [ref=e244]: https://www.tianqi.com › today
+          - heading "【无锡今天天气预报】无锡天气预报24小时详情_无锡天气网" [level=2] [ref=e245]:
+            - link "【无锡今天天气预报】无锡天气预报24小时详情_无锡天气网" [ref=e246] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=f415c089fba48cab874dac789764b28a4c9300307286a2084438e0bec3a4e83aJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cudGlhbnFpLmNvbS93dXhpMS90b2RheS8&ntb=1
+          - paragraph [ref=e248]: "25 ℃ 晴 22 ~ 31℃ 空气质量：优 湿度：35% 风向：东南风 4级 紫外线：无 日出: 04:53 日落: 19:01 无锡一周天气 无锡10天天气 无锡15天天气 无锡30天天气 晴 晴 晴 晴 晴 晴 晴 晴 东南风 东南风 东南风 …"
+        - listitem [ref=e249]:
+          - link "2345天气王" [ref=e251] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=789ae603df06426da9ade4a13064ad3640dbabc1f0881b97adef950b470a1eeeJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuMjM0NS5jb20vdG9kYXktNTgzNTQuaHRt&ntb=1
+            - generic [ref=e256]:
+              - generic [ref=e257]: 2345天气王
+              - generic [ref=e260]: https://tianqi.2345.com
+          - heading "【无锡24小时天气查询】_无锡今日逐小时天气预报查询_2345天气预报" [level=2] [ref=e261]:
+            - link "【无锡24小时天气查询】_无锡今日逐小时天气预报查询_2345天气预报" [ref=e262] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=789ae603df06426da9ade4a13064ad3640dbabc1f0881b97adef950b470a1eeeJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuMjM0NS5jb20vdG9kYXktNTgzNTQuaHRt&ntb=1
+          - paragraph [ref=e264]: 手机看天气 现在 东北风 3级 优 03:00 东北风 3级 优 04:00 东北风 3级 优 05:00 东北风 3级 优 06:00 东北风 3级 优 07:00 东北风 3级 优 08:00 东北风 3级 优 09:00 东北风 3级 优 10:00 东北风 3级 优 11:00 …
+        - listitem [ref=e265]:
+          - link "eastday.com" [ref=e267] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=1ca1505c73f3b6be18a46b5b33b2172aea62430621d130a0161a1750b3e1f848JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuZWFzdGRheS5jb20vd3V4aTEv&ntb=1
+            - generic [ref=e272]:
+              - generic [ref=e273]: eastday.com
+              - generic [ref=e276]: https://tianqi.eastday.com
+          - heading "无锡天气_【无锡今天天气预报】无锡天气预报24小时详情_无锡天气 …" [level=2] [ref=e277]:
+            - link "无锡天气_【无锡今天天气预报】无锡天气预报24小时详情_无锡天气 …" [ref=e278] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=1ca1505c73f3b6be18a46b5b33b2172aea62430621d130a0161a1750b3e1f848JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuZWFzdGRheS5jb20vd3V4aTEv&ntb=1
+          - paragraph [ref=e280]: 3 小时之前 · 东方天气为您提供无锡天气预报24小时详情、无锡今日天气预报，包括今日实时温度、24小时降水概率、湿度、pm2.5、风向、紫外线强度等，助您放心出行。
+        - listitem [ref=e281]:
+          - link "aichaxun.com" [ref=e283] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=2b7397e1003356f9223a8d927a227ff9e77e7969a8ea0869fd7212146912cfdfJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuYWljaGF4dW4uY29tL3d1eGlzaGkv&ntb=1
+            - generic [ref=e288]:
+              - generic [ref=e289]: aichaxun.com
+              - generic [ref=e292]: https://tianqi.aichaxun.com › wuxishi
+          - heading "无锡市天气预报-无锡市天气预报7天,15天及24小时实况查询-天气预报" [level=2] [ref=e293]:
+            - link "无锡市天气预报-无锡市天气预报7天,15天及24小时实况查询-天气预报" [ref=e294] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=2b7397e1003356f9223a8d927a227ff9e77e7969a8ea0869fd7212146912cfdfJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly90aWFucWkuYWljaGF4dW4uY29tL3d1eGlzaGkv&ntb=1
+          - paragraph [ref=e296]: 3 小时之前 · 爱查询为您提供江苏无锡天气预报、无锡市7天、15天天气预报，方便大家查询无锡市天气预报包括温度、降雨以及空气质量pm2.5的24小时无锡市天气实时数据，能及时根据天气情况安排工作 …
+        - listitem [ref=e297]:
+          - link "中国气象局" [ref=e299] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=794da9fd4500c43f2a9a2bff27406c24b0d7ebb157c678f084a313e37102e1ceJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL3d3dy5ubWMuY24vcHVibGlzaC9mb3JlY2FzdC9BSlMvd3V4aS5odG1s&ntb=1
+            - generic [ref=e304]:
+              - generic [ref=e305]: 中国气象局
+              - generic [ref=e308]: http://www.nmc.cn › publish › forecast › AJS › wuxi.html
+          - heading "无锡-天气预报" [level=2] [ref=e309]:
+            - link "无锡-天气预报" [ref=e310] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=794da9fd4500c43f2a9a2bff27406c24b0d7ebb157c678f084a313e37102e1ceJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL3d3dy5ubWMuY24vcHVibGlzaC9mb3JlY2FzdC9BSlMvd3V4aS5odG1s&ntb=1
+          - paragraph [ref=e312]: 无锡 日落 降水量 相对湿度 体感温度 雷达图 24小时预报 7天预报 10天预报 11-30天预报 发布时间：06-07 12:00 06/07 周日 多云 东北风 微风 30℃ 21℃ 多云 东北风 3~4级 06/08 周一 阴 东北风 微风 25℃ …
+        - listitem [ref=e313]:
+          - link "Weather Atlas" [ref=e315] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=9ef430b21e33e6c1aae3490e61103a7060a3c735c9b47e17c11879e8b6a75fadJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci1hdGxhcy5jb20vemgvY2hpbmEvd3V4aQ&ntb=1
+            - generic [ref=e320]:
+              - generic [ref=e321]: Weather Atlas
+              - generic [ref=e324]: https://www.weather-atlas.com › zh › china › wuxi
+          - heading "今天天气 - 无锡市, 中国 - Weather Atlas" [level=2] [ref=e325]:
+            - link "今天天气 - 无锡市, 中国 - Weather Atlas" [ref=e326] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=9ef430b21e33e6c1aae3490e61103a7060a3c735c9b47e17c11879e8b6a75fadJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cud2VhdGhlci1hdGxhcy5jb20vemgvY2hpbmEvd3V4aQ&ntb=1
+          - paragraph [ref=e328]: "大部分地区多云 降水概率: 5% 风: 14公里每小时 ESE 115° 细节 更新: Jun 5, 2026 @ 08:20:17 UTC 发布者: Weather Atlas | 关于我们 数据来源 | weather.com | Weather 天气预报和气候 今天 明天 长期"
+        - listitem [ref=e329]:
+          - link "天气网" [ref=e331] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=a02dc0dbe30bc4feb530ab994f6342b4b78d662dac88fbb45591c3cc0edb9db8JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cudGlhbnFpLmNvbS93dXhpMS8xNS8&ntb=1
+            - generic [ref=e336]:
+              - generic [ref=e337]: 天气网
+              - generic [ref=e340]: https://www.tianqi.com
+          - heading "无锡天气预报15天_无锡天气预报15天查询,无锡未来15天天气预报- 无 …" [level=2] [ref=e341]:
+            - link "无锡天气预报15天_无锡天气预报15天查询,无锡未来15天天气预报- 无 …" [ref=e342] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=a02dc0dbe30bc4feb530ab994f6342b4b78d662dac88fbb45591c3cc0edb9db8JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly93d3cudGlhbnFpLmNvbS93dXhpMS8xNS8&ntb=1
+          - paragraph [ref=e344]: 1 天前 · 无锡天气网提供无锡天气预报15天，无锡天气预报15天查询，无锡未来15天天气预报，通过无锡天气预报15天查询，及时了解无锡各地区未来15天的天气状况，温度，降水量，风向等。 助您放心 …
+        - listitem [ref=e345]:
+          - link "IP地址查询网" [ref=e347] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c86bca91787b379058fbdbcd3daa6e802d7f772968ec7821af19b76d1f99949fJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly9xcS5pcDEzOC5jb20vd2VhdGhlci9qaWFuZ3N1L1d1WGkuaHRt&ntb=1
+            - generic [ref=e352]:
+              - generic [ref=e353]: IP地址查询网
+              - generic [ref=e356]: https://qq.ip138.com › weather › jiangsu › WuXi.htm
+          - heading "无锡天气预报,无锡未来5天天气预报,江苏无锡天气预报" [level=2] [ref=e357]:
+            - link "无锡天气预报,无锡未来5天天气预报,江苏无锡天气预报" [ref=e358] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=c86bca91787b379058fbdbcd3daa6e802d7f772968ec7821af19b76d1f99949fJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly9xcS5pcDEzOC5jb20vd2VhdGhlci9qaWFuZ3N1L1d1WGkuaHRt&ntb=1
+          - paragraph [ref=e360]: 1 天前 · 为你提供快速准确的无锡一周天气预报,未来5天的天气预报和气象趋势预测,主要指标包括每天最高气温、最低气温、天气状况 ...
+        - listitem [ref=e361]:
+          - link "IP.cn" [ref=e363] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=217b1dfd9395042c492e4f9972404e8b13b40574b023ea60c44d8c8a537fbc53JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly9pcC5jbi90aWFucWkvamlhbmdzdS93dXhpLzEwZGF5Lmh0bWw&ntb=1
+            - generic [ref=e368]:
+              - generic [ref=e369]: IP.cn
+              - generic [ref=e372]: https://ip.cn › tianqi › jiangsu › wuxi
+          - heading "无锡10天天气 江苏省无锡市10天天气预报 无锡市最近10天天气查询 IP.cn" [level=2] [ref=e373]:
+            - link "无锡10天天气 江苏省无锡市10天天气预报 无锡市最近10天天气查询 IP.cn" [ref=e374] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=217b1dfd9395042c492e4f9972404e8b13b40574b023ea60c44d8c8a537fbc53JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cHM6Ly9pcC5jbi90aWFucWkvamlhbmdzdS93dXhpLzEwZGF5Lmh0bWw&ntb=1
+          - paragraph [ref=e376]: 1 天前 · 无锡10天天气 最新江苏省无锡市10天天气，包含每天最高气温、最低气温、天气状况及风向等天气信息
+        - listitem [ref=e377]:
+          - generic [ref=e378]:
+            - heading "深入了解 今日无锡天气" [level=2] [ref=e379]:
+              - text: 深入了解
+              - strong [ref=e380]: 今日无锡天气
+            - list [ref=e381]:
+              - listitem [ref=e382]:
+                - link "今天无锡天气预报" [ref=e383] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=4b4af67bafc2dd07eaf3a47b0f87a64373bd514510248104ab3046f00ffb85caJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNCViYiU4YSVlNSVhNCVhOSVlNiU5NyVhMCVlOSU5NCVhMSVlNSVhNCVhOSVlNiViMCU5NCVlOSVhMiU4NCVlNiU4YSVhNSZGT1JNPVFTUkUx&ntb=1
+                  - strong [ref=e386]: 今天无锡天气预报
+              - listitem [ref=e387]:
+                - link "无锡15天天气预报" [ref=e388] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=768ed359d1e0935efc8bfbd4faed8415233d6b93572a82eb6a68c5c65183a602JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMTE1JWU1JWE0JWE5JWU1JWE0JWE5JWU2JWIwJTk0JWU5JWEyJTg0JWU2JThhJWE1JkZPUk09UVNSRTI&ntb=1
+                  - strong [ref=e391]: 无锡15天天气预报
+              - listitem [ref=e392]:
+                - link "无锡今天天气预报" [ref=e393] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=4d646fa9f8dc3cc2d68c22e7c47c61e1cdd3064fe6a2b3ec805091ea199cdb43JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMSVlNCViYiU4YSVlNSVhNCVhOSVlNSVhNCVhOSVlNiViMCU5NCVlOSVhMiU4NCVlNiU4YSVhNSZGT1JNPVFTUkUz&ntb=1
+                  - strong [ref=e396]: 无锡今天天气预报
+              - listitem [ref=e397]:
+                - link "无锡天气24小时分段" [ref=e398] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=a6d633b8bd84b7e8167103a59e7b51a62a5950faa43561db195914bb7bf5c85dJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMSVlNSVhNCVhOSVlNiViMCU5NDI0JWU1JWIwJThmJWU2JTk3JWI2JWU1JTg4JTg2JWU2JWFlJWI1JkZPUk09UVNSRTQ&ntb=1
+                  - strong [ref=e401]: 无锡天气24小时分段
+              - listitem [ref=e402]:
+                - link "无锡48小时天气预报" [ref=e403] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=47f24fb72a6fcebf13f109385a6218f542034ac9e0cf9188c892ea581b7880beJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMTQ4JWU1JWIwJThmJWU2JTk3JWI2JWU1JWE0JWE5JWU2JWIwJTk0JWU5JWEyJTg0JWU2JThhJWE1JkZPUk09UVNSRTU&ntb=1
+                  - strong [ref=e406]: 无锡48小时天气预报
+              - listitem [ref=e407]:
+                - link "未来15天无锡天气预报" [ref=e408] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=f37a381f6c5fb10f4ee9678c162a325c75a76031d37da5b49e4276bab3cb6600JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5YyVhYSVlNiU5ZCVhNTE1JWU1JWE0JWE5JWU2JTk3JWEwJWU5JTk0JWExJWU1JWE0JWE5JWU2JWIwJTk0JWU5JWEyJTg0JWU2JThhJWE1JkZPUk09UVNSRTY&ntb=1
+                  - strong [ref=e411]: 未来15天无锡天气预报
+              - listitem [ref=e412]:
+                - link "无锡实时天气预报" [ref=e413] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=4637dc706f1effc8dfd08b31fe83ee684531a3fb4bbe78165aad12510e266804JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMSVlNSVhZSU5ZSVlNiU5NyViNiVlNSVhNCVhOSVlNiViMCU5NCVlOSVhMiU4NCVlNiU4YSVhNSZGT1JNPVFTUkU3&ntb=1
+                  - strong [ref=e416]: 无锡实时天气预报
+              - listitem [ref=e417]:
+                - link "无锡气温最近15天查询情况" [ref=e418] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=4482f32b07fc9d8af2fbbba3286d684f95ed6931f2c9df89c5f2b61499229fdeJmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1L3NlYXJjaD9xPSVlNiU5NyVhMCVlOSU5NCVhMSVlNiViMCU5NCVlNiViOCVhOSVlNiU5YyU4MCVlOCViZiU5MTE1JWU1JWE0JWE5JWU2JTlmJWE1JWU4JWFmJWEyJWU2JTgzJTg1JWU1JTg2JWI1JkZPUk09UVNSRTg&ntb=1
+                  - strong [ref=e421]: 无锡气温最近15天查询情况
+        - listitem [ref=e422]:
+          - link "某些结果已被删除" [ref=e424] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=46ce60fa9b8e048fc066827ac7f42dad261cdceb894d715881f1d9fdc3f1a0c2JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9NjE3MzUw&ntb=1
+        - listitem [ref=e425]:
+          - navigation "今日无锡天气 的更多搜索结果":
+            - list:
+              - listitem [ref=e426]:
+                - generic "第 1 页" [ref=e427]: "1"
+              - listitem [ref=e428]:
+                - link "第 2 页" [ref=e429] [cursor=pointer]:
+                  - /url: /search?q=%e4%bb%8a%e6%97%a5%e6%97%a0%e9%94%a1%e5%a4%a9%e6%b0%94&FPIG=136668B4842742299F746FB7DE2C790E&first=11&FORM=PERE
+                  - text: "2"
+              - listitem [ref=e430]:
+                - link "第 3 页" [ref=e431] [cursor=pointer]:
+                  - /url: /search?q=%e4%bb%8a%e6%97%a5%e6%97%a0%e9%94%a1%e5%a4%a9%e6%b0%94&FPIG=136668B4842742299F746FB7DE2C790E&first=21&FORM=PERE1
+                  - text: "3"
+              - listitem [ref=e432]:
+                - link "下一页" [ref=e433] [cursor=pointer]:
+                  - /url: /search?q=%e4%bb%8a%e6%97%a5%e6%97%a0%e9%94%a1%e5%a4%a9%e6%b0%94&FPIG=136668B4842742299F746FB7DE2C790E&first=11&FORM=PORE
+      - complementary "更多结果"
+  - contentinfo [ref=e434]:
+    - generic [ref=e435]:
+      - list:
+        - listitem [ref=e436]:
+          - link "隐私" [ref=e437] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=12706445d19c9ace3674a9c8b3ec9806b94ebffd8a5ce8d3598452dfae15cd93JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSWQ9NTIxODM5&ntb=1
+        - listitem [ref=e438]:
+          - link "条款" [ref=e439] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=d0d8236a358743032cd53dfadc19b9bfa527d4b3ff6a3756afaa7b4c5b2cb8b8JmltdHM9MTc4MDc5MDQwMA&ptn=3&ver=2&hsh=4&fclid=07569fee-10f0-6834-0509-889c11df6995&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9MjQ2MzM4&ntb=1

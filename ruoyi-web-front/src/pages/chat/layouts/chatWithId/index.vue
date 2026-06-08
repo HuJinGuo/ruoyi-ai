@@ -24,6 +24,8 @@ type MessageItem = BubbleProps & {
   thinkingStatus?: ThinkingStatus;
   thinlCollapse?: boolean;
   reasoning_content?: string;
+  toolCalls?: ToolCallInfo[];
+  toolCallsCollapsed?: boolean;
   class?: string;
 };
 
@@ -44,13 +46,8 @@ const chatSenderRef = ref<InstanceType<typeof ChatSender> | null>(null);
 const bubbleItems = ref<MessageItem[]>([]);
 const bubbleListRef = ref<BubbleListInstance | null>(null);
 
-// 独立的工具调用事件列表
-const toolCallEvents = ref<ToolCallInfo[]>([]);
 // 工具调用事件计数器（用于生成唯一 key）
 let toolCallKeyCounter = 0;
-
-// 是否有工具调用事件
-const hasToolCallEvents = computed(() => toolCallEvents.value.length > 0);
 
 const copyIconMap = ref<Record<number, string>>({}); // 记录每条消息的复制按钮图标
 const editingMessageKeys = ref<number[]>([]); // 跟踪多个编辑中的消息
@@ -86,8 +83,6 @@ watch(
   () => route.params?.id,
   async (_id_) => {
     if (_id_) {
-      // 切换会话时清空工具调用事件
-      toolCallEvents.value = [];
       toolCallKeyCounter = 0;
 
       if (_id_ !== 'not_login') {
@@ -134,8 +129,6 @@ function handleError(err: any) {
 
 async function startSSE(chatContent: string) {
   try {
-    // 清空上一次的工具调用事件
-    toolCallEvents.value = [];
     toolCallKeyCounter = 0;
 
     // 添加用户输入的消息
@@ -173,11 +166,14 @@ async function startSSE(chatContent: string) {
         hasReceivedFirstContent = true;
       }
 
-      if (isStreamEnd) {
-        break; // 提前结束流处理
-      }
       // 等待 Vue 更新 DOM，实现真正的流式渲染
       await nextTick();
+
+      if (isStreamEnd) {
+        // 收到 done 后不主动 break，继续把浏览器/TransformStream 中已排队的事件读完。
+        // 后端会随后关闭 SSE，for-await 会自然结束；主动 break 容易丢掉同批次里尚未渲染的尾部内容。
+        console.log('[SSE] 收到结束事件，等待连接自然关闭');
+      }
     }
   }
   catch (err) {
@@ -212,70 +208,27 @@ function handleDataChunk(chunk: AnyObject | string): boolean {
   console.log('[SSE] 收到 chunk:', chunk, 'type:', typeof chunk);
 
   try {
-    let dataObj: AnyObject | null = null;
-    let eventType = '';
-
     if (typeof chunk === 'string') {
-      if (chunk === ':connected' || chunk === ':disconnected') {
+      if (chunk === ':connected' || chunk === ':disconnected' || chunk.startsWith(':')) {
         console.log('[SSE] 连接状态:', chunk);
         return false;
       }
 
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        if (line.startsWith('event:')) {
-          eventType = line.substring(6).trim();
-        }
-        else if (line.startsWith('data:')) {
-          const jsonStr = line.substring(5).trim();
-          try {
-            dataObj = JSON.parse(jsonStr);
-          }
-          catch {
-            console.warn('[SSE] JSON 解析失败:', jsonStr);
-          }
-        }
-      }
-
-      if (eventType === 'done' || dataObj?.done === true) {
-        console.log('[SSE] 流结束');
-        return true;
-      }
-
-      if (eventType === 'mcp' && dataObj) {
-        handleMcpEvent(dataObj);
-        return false;
-      }
-
-      if (dataObj && eventType === 'content') {
-        const content = dataObj.content || '';
-        if (content) {
-          handleContentChunk(content);
-        }
-        const reasoningContent = dataObj.reasoning_content || '';
-        if (reasoningContent) {
-          const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
-          if (lastMessage) {
-            lastMessage.thinkingStatus = 'thinking';
-            lastMessage.loading = true;
-            lastMessage.thinlCollapse = true;
-            lastMessage.reasoning_content += reasoningContent;
-            bubbleItems.value = [...bubbleItems.value];
-          }
-        }
-      }
+      return parseSseStringEvents(chunk).reduce(
+        (shouldEnd, event) => handleSseEvent(event.data, event.eventType) || shouldEnd,
+        false,
+      );
     }
     else if (typeof chunk === 'object' && chunk !== null) {
+      const eventType = chunk.event || '';
+
+      if (eventType || chunk.done === true) {
+        return handleSseEvent(chunk, eventType);
+      }
+
       const reasoningChunk = chunk?.choices?.[0]?.delta?.reasoning_content;
       if (reasoningChunk) {
-        const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
-        if (lastMessage) {
-          lastMessage.thinkingStatus = 'thinking';
-          lastMessage.loading = true;
-          lastMessage.thinlCollapse = true;
-          lastMessage.reasoning_content += reasoningChunk;
-          bubbleItems.value = [...bubbleItems.value];
-        }
+        appendReasoningContent(reasoningChunk);
       }
 
       const parsedChunk = chunk?.choices?.[0]?.delta?.content;
@@ -287,6 +240,8 @@ function handleDataChunk(chunk: AnyObject | string): boolean {
       if (directContent) {
         handleContentChunk(directContent);
       }
+
+      return Boolean(chunk?.choices?.[0]?.finish_reason);
     }
   }
   catch (err) {
@@ -294,6 +249,80 @@ function handleDataChunk(chunk: AnyObject | string): boolean {
   }
 
   return false;
+}
+
+function parseSseStringEvents(chunk: string) {
+  return chunk
+    .split(/\n\n+/)
+    .map(block => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      let eventType = '';
+      const dataLines: string[] = [];
+
+      for (const line of block.split('\n')) {
+        if (line.startsWith('event:')) {
+          eventType = line.substring(6).trim();
+        }
+        else if (line.startsWith('data:')) {
+          dataLines.push(line.substring(5).trim());
+        }
+      }
+
+      const dataText = dataLines.join('\n');
+      if (!dataText) {
+        return { eventType, data: { event: eventType } };
+      }
+
+      try {
+        return { eventType, data: JSON.parse(dataText) as AnyObject };
+      }
+      catch {
+        console.warn('[SSE] JSON 解析失败:', dataText);
+        return { eventType, data: { event: eventType, content: dataText } };
+      }
+    });
+}
+
+function handleSseEvent(dataObj: AnyObject, rawEventType = ''): boolean {
+  const eventType = rawEventType || dataObj.event || '';
+
+  if (eventType === 'mcp' || eventType === 'mcp_tool') {
+    handleMcpEvent(dataObj);
+  }
+  else if (eventType === 'content' || eventType === 'message' || dataObj.content) {
+    const content = dataObj.content || '';
+    if (content) {
+      handleContentChunk(content);
+    }
+  }
+
+  const reasoningContent = dataObj.reasoning_content || dataObj.reasoningContent || '';
+  if (reasoningContent) {
+    appendReasoningContent(reasoningContent);
+  }
+
+  if (eventType === 'error' && dataObj.error) {
+    ElMessage.error(dataObj.error);
+  }
+
+  if (eventType === 'done' || dataObj.done === true) {
+    console.log('[SSE] 流结束');
+    return true;
+  }
+
+  return false;
+}
+
+function appendReasoningContent(reasoningContent: string) {
+  const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
+  if (lastMessage) {
+    lastMessage.thinkingStatus = 'thinking';
+    lastMessage.loading = true;
+    lastMessage.thinlCollapse = true;
+    lastMessage.reasoning_content += reasoningContent;
+    bubbleItems.value = [...bubbleItems.value];
+  }
 }
 
 function handleMcpEvent(dataObj: AnyObject) {
@@ -304,9 +333,16 @@ function handleMcpEvent(dataObj: AnyObject) {
       ? JSON.parse(dataObj.content)
       : dataObj.content;
 
-    const toolName = content.name || 'Unknown Tool';
+    const toolName = content.name || content.toolName || 'Unknown Tool';
     const toolStatus = content.status || 'pending';
     const toolResult = content.result || null;
+    const assistantMessage = getCurrentAssistantMessage();
+
+    if (!assistantMessage) {
+      return;
+    }
+
+    const currentToolCalls = assistantMessage.toolCalls || [];
 
     if (toolStatus === 'pending') {
       const toolInfo: ToolCallInfo = {
@@ -316,21 +352,21 @@ function handleMcpEvent(dataObj: AnyObject) {
         result: null,
         timestamp: Date.now(),
       };
-      toolCallEvents.value = [...toolCallEvents.value, toolInfo];
+      assistantMessage.toolCalls = [...currentToolCalls, toolInfo];
     }
     else {
-      const index = toolCallEvents.value.findIndex(
+      const index = currentToolCalls.findIndex(
         t => t.name === toolName && t.status === 'pending',
       );
       if (index >= 0) {
-        const updatedEvents = [...toolCallEvents.value];
+        const updatedEvents = [...currentToolCalls];
         updatedEvents[index] = {
           ...updatedEvents[index],
           status: toolStatus,
           result: toolResult,
           timestamp: Date.now(),
         };
-        toolCallEvents.value = updatedEvents;
+        assistantMessage.toolCalls = updatedEvents;
       }
       else {
         const toolInfo: ToolCallInfo = {
@@ -340,15 +376,27 @@ function handleMcpEvent(dataObj: AnyObject) {
           result: toolResult,
           timestamp: Date.now(),
         };
-        toolCallEvents.value = [...toolCallEvents.value, toolInfo];
+        assistantMessage.toolCalls = [...currentToolCalls, toolInfo];
       }
     }
 
-    console.log('[SSE] 工具调用列表:', toolCallEvents.value);
+    bubbleItems.value = [...bubbleItems.value];
+    console.log('[SSE] 工具调用列表:', assistantMessage.toolCalls);
+    bubbleListRef.value?.scrollToBottom();
   }
   catch (err) {
     console.error('[SSE] MCP 事件解析失败:', err);
   }
+}
+
+function getCurrentAssistantMessage() {
+  for (let i = bubbleItems.value.length - 1; i >= 0; i--) {
+    const item = bubbleItems.value[i];
+    if (item.role === 'system') {
+      return item;
+    }
+  }
+  return null;
 }
 
 function handleContentChunk(content: string) {
@@ -434,6 +482,8 @@ function addMessage(message: string, isUser: boolean) {
     loading: !isUser,
     content: message || '',
     reasoning_content: '',
+    toolCalls: [],
+    toolCallsCollapsed: false,
     thinkingStatus: 'start',
     thinlCollapse: false,
     noStyle: !isUser,
@@ -478,17 +528,6 @@ function handleCreateNewChat() {
 <template>
   <div class="chat-with-id-container">
     <div class="chat-warp">
-      <!-- 工具调用事件区域 -->
-      <Transition name="tool-events-fade">
-        <div v-if="hasToolCallEvents" class="tool-events-wrapper">
-          <ToolCallCard
-            v-for="tool in toolCallEvents"
-            :key="tool.key"
-            :tool-info="tool"
-          />
-        </div>
-      </Transition>
-
       <BubbleList ref="bubbleListRef" :list="bubbleItems" max-height="calc(100vh - 240px)">
         <template #header="{ item }">
           <Thinking
@@ -502,14 +541,41 @@ function handleCreateNewChat() {
         </template>
 
         <template #content="{ item }">
-          <XMarkdown
-            v-if="item.content && item.role === 'system'"
-            :markdown="item.content"
-            :code-x-render="codeXRender"
-            class="markdown-body"
-            :themes="{ light: 'github-light', dark: 'github-dark' }"
-            default-theme-mode="dark"
-          />
+          <div v-if="item.role === 'system'" class="assistant-answer-card">
+            <div v-if="item.toolCalls?.length" class="assistant-tool-call-block">
+              <div
+                class="tool-call-block-header"
+                @click="item.toolCallsCollapsed = !item.toolCallsCollapsed"
+              >
+                <div class="tool-call-heading">
+                  <span class="tool-call-title">工具调用</span>
+                  <span class="tool-call-count">{{ item.toolCalls.length }} 步</span>
+                </div>
+                <el-icon class="tool-call-toggle" :class="{ collapsed: item.toolCallsCollapsed }">
+                  <ArrowDown />
+                </el-icon>
+              </div>
+              <el-collapse-transition>
+                <div v-show="!item.toolCallsCollapsed" class="tool-call-list">
+                  <ToolCallCard
+                    v-for="tool in item.toolCalls"
+                    :key="tool.key"
+                    :tool-info="tool"
+                  />
+                </div>
+              </el-collapse-transition>
+            </div>
+
+            <XMarkdown
+              v-if="item.content"
+              :markdown="item.content"
+              :code-x-render="codeXRender"
+              class="markdown-body"
+              :themes="{ light: 'github-light', dark: 'github-dark' }"
+              default-theme-mode="dark"
+            />
+          </div>
+
           <div v-if="item.content && item.role === 'user'" class="userContent">
             <div class="user-bubble" :class="{ editing: editingMessageKeys.includes(item.key) }">
               <template v-if="!editingMessageKeys.includes(item.key)">
@@ -557,11 +623,13 @@ function handleCreateNewChat() {
 
       <div class="sender-wrapper">
         <!-- 新对话按钮 -->
-        <div class="new-chat-btn" @click="handleCreateNewChat">
-          <el-icon class="btn-icon">
-            <Plus />
-          </el-icon>
-          <span class="btn-text">新对话</span>
+        <div class="sender-actions-row">
+          <div class="new-chat-btn" @click="handleCreateNewChat">
+            <el-icon class="btn-icon">
+              <Plus />
+            </el-icon>
+            <span class="btn-text">新对话</span>
+          </div>
         </div>
 
         <ChatSender
@@ -671,31 +739,20 @@ function handleCreateNewChat() {
       margin-bottom: 12px;
     }
 
-    .tool-events-wrapper {
-      padding: 12px;
-    }
-
-    .tool-events-fade-enter-active,
-    .tool-events-fade-leave-active {
-      transition: all 0.3s ease;
-    }
-
-    .tool-events-fade-enter-from,
-    .tool-events-fade-leave-to {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-
     .sender-wrapper {
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       width: 100%;
       margin-bottom: 22px;
 
+      .sender-actions-row {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+      }
+
       .new-chat-btn {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        z-index: 10;
         display: inline-flex;
         gap: 6px;
         align-items: center;
@@ -732,6 +789,12 @@ function handleCreateNewChat() {
         }
       }
     }
+
+    @media (max-width: 640px) {
+      .sender-wrapper {
+        margin-bottom: 14px;
+      }
+    }
   }
 
   :deep() {
@@ -764,5 +827,66 @@ function handleCreateNewChat() {
       overflow: visible;
     }
   }
+}
+
+.assistant-answer-card {
+  width: min(100%, 680px);
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgb(248 250 252 / 92%), rgb(255 255 255 / 96%));
+  border: 1px solid rgb(226 232 240 / 90%);
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgb(15 23 42 / 6%);
+
+  :deep(.elx-xmarkdown-container) {
+    padding: 10px 0 0;
+  }
+}
+
+.assistant-tool-call-block {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(226 232 240 / 75%);
+}
+
+.tool-call-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tool-call-heading {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tool-call-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.tool-call-count {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.tool-call-toggle {
+  color: #8a93a3;
+  transition: transform 0.2s ease;
+
+  &.collapsed {
+    transform: rotate(-90deg);
+  }
+}
+
+.tool-call-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
 }
 </style>

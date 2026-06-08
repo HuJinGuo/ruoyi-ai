@@ -105,14 +105,22 @@ public class SseEmitterManager {
         }
         Map<String, SseEmitter> emitters = USER_TOKEN_EMITTERS.get(userId);
         if (MapUtil.isNotEmpty(emitters)) {
+            SseEmitter sseEmitter = emitters.remove(token);
             try {
-                SseEmitter sseEmitter = emitters.get(token);
-                sseEmitter.send(SseEmitter.event().comment("disconnected"));
-                //sseEmitter.complete();
+                if (sseEmitter != null) {
+                    sseEmitter.send(SseEmitter.event().comment("disconnected"));
+                    sseEmitter.complete();
+                }
             } catch (Exception exception) {
                 log.error(exception.getMessage());
+                if (sseEmitter != null) {
+                    sseEmitter.completeWithError(exception);
+                }
+            } finally {
+                if (emitters.isEmpty()) {
+                    USER_TOKEN_EMITTERS.remove(userId);
+                }
             }
-            emitters.remove(token);
         } else {
             USER_TOKEN_EMITTERS.remove(userId);
         }

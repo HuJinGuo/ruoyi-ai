@@ -28,23 +28,53 @@ async function handleSubmit(content: string) {
 
 <template>
   <div class="chat-defaul-wrap">
-    <WelecomeText />
-    <ChatSender
-      ref="senderRef"
-      v-model="senderValue"
-      @submit="handleSubmit"
-    />
+    <div class="welcome-region">
+      <WelecomeText />
+    </div>
+
+    <div class="default-sender-wrapper">
+      <ChatSender
+        ref="senderRef"
+        v-model="senderValue"
+        @submit="handleSubmit"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .chat-defaul-wrap {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 100%;
   max-width: 800px;
-  min-height: 450px;
+  min-height: min(620px, calc(100vh - 96px));
+  gap: 32px;
+  padding: 24px 0 48px;
+  box-sizing: border-box;
+}
+
+.welcome-region,
+.default-sender-wrapper {
+  width: 100%;
+}
+
+.welcome-region {
+  display: flex;
+  justify-content: center;
+}
+
+.default-sender-wrapper {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .chat-defaul-wrap {
+    min-height: calc(100vh - 96px);
+    gap: 24px;
+    padding: 16px 0 32px;
+  }
 }
 </style>

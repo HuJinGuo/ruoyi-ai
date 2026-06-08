@@ -32,6 +32,84 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
         return toJson(SpringUtils.getBean(CrmContractMapper.class).selectById(contractId));
     }
 
+    @Tool("按合同名称查询 CRM 合同，用于用户只提供合同名时定位 XTP 制造闭环合同")
+    public String crmContractQueryByName(String contractName) {
+        log.info("【XTP工具调用】crmContractQueryByName contractName={}", contractName);
+        return toJson(SpringUtils.getBean(CrmContractMapper.class)
+            .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.crm.CrmContract>()
+                .like(org.ruoyi.system.domain.crm.CrmContract::getName, contractName)
+                .orderByDesc(org.ruoyi.system.domain.crm.CrmContract::getCreateTime)));
+    }
+
+    @Tool("按合同名称直接汇总 XTP 制造闭环状态，避免模型转抄长合同ID出错")
+    public String xtpManufacturingStatusByContractName(String contractName) {
+        log.info("【XTP工具调用】xtpManufacturingStatusByContractName contractName={}", contractName);
+        org.ruoyi.system.domain.crm.CrmContract contract = SpringUtils.getBean(CrmContractMapper.class)
+            .selectOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.crm.CrmContract>()
+                .like(org.ruoyi.system.domain.crm.CrmContract::getName, contractName)
+                .orderByDesc(org.ruoyi.system.domain.crm.CrmContract::getCreateTime)
+                .last("limit 1"));
+        if (contract == null) {
+            return toJson(java.util.Map.of("contractName", contractName, "message", "合同不存在"));
+        }
+        return xtpManufacturingStatusByContractId(contract.getContractId());
+    }
+
+    @Tool("按合同ID汇总 XTP 制造闭环状态，包含工单、阶段、工程物料、采购、收料、发料和库存")
+    public String xtpManufacturingStatusByContractId(Long contractId) {
+        log.info("【XTP工具调用】xtpManufacturingStatusByContractId contractId={}", contractId);
+        CrmContractMapper contractMapper = SpringUtils.getBean(CrmContractMapper.class);
+        MesWorkOrderMapper workOrderMapper = SpringUtils.getBean(MesWorkOrderMapper.class);
+        org.ruoyi.system.mapper.mes.MesWorkOrderStageMapper stageMapper = SpringUtils.getBean(org.ruoyi.system.mapper.mes.MesWorkOrderStageMapper.class);
+        EngineeringMaterialMapper materialMapper = SpringUtils.getBean(EngineeringMaterialMapper.class);
+        SrmPurchaseRequestMapper purchaseRequestMapper = SpringUtils.getBean(SrmPurchaseRequestMapper.class);
+        org.ruoyi.system.mapper.srm.SrmPurchaseOrderMapper purchaseOrderMapper = SpringUtils.getBean(org.ruoyi.system.mapper.srm.SrmPurchaseOrderMapper.class);
+        org.ruoyi.system.mapper.wms.WmsReceiptOrderMapper receiptOrderMapper = SpringUtils.getBean(org.ruoyi.system.mapper.wms.WmsReceiptOrderMapper.class);
+        org.ruoyi.system.mapper.wms.WmsIssueOrderMapper issueOrderMapper = SpringUtils.getBean(org.ruoyi.system.mapper.wms.WmsIssueOrderMapper.class);
+        WmsInventoryMapper inventoryMapper = SpringUtils.getBean(WmsInventoryMapper.class);
+
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        org.ruoyi.system.domain.crm.CrmContract contract = contractMapper.selectById(contractId);
+        result.put("contract", contract);
+        java.util.List<org.ruoyi.system.domain.mes.MesWorkOrder> workOrders = workOrderMapper
+            .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.mes.MesWorkOrder>()
+                .eq(org.ruoyi.system.domain.mes.MesWorkOrder::getContractId, contractId)
+                .orderByDesc(org.ruoyi.system.domain.mes.MesWorkOrder::getCreateTime));
+        java.util.List<java.util.Map<String, Object>> workOrderDetails = new java.util.ArrayList<>();
+        for (org.ruoyi.system.domain.mes.MesWorkOrder workOrder : workOrders) {
+            java.util.Map<String, Object> detail = new java.util.LinkedHashMap<>();
+            Long workOrderId = workOrder.getWorkOrderId();
+            detail.put("workOrder", workOrder);
+            detail.put("stages", stageMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.mes.MesWorkOrderStage>()
+                .eq(org.ruoyi.system.domain.mes.MesWorkOrderStage::getWorkOrderId, workOrderId)
+                .orderByAsc(org.ruoyi.system.domain.mes.MesWorkOrderStage::getCreateTime)));
+            java.util.List<org.ruoyi.system.domain.engineering.EngineeringMaterial> materials = materialMapper
+                .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.engineering.EngineeringMaterial>()
+                    .eq(org.ruoyi.system.domain.engineering.EngineeringMaterial::getWorkOrderId, workOrderId));
+            detail.put("engineeringMaterials", materials);
+            detail.put("purchaseRequests", purchaseRequestMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.srm.SrmPurchaseRequest>()
+                .eq(org.ruoyi.system.domain.srm.SrmPurchaseRequest::getWorkOrderId, workOrderId)));
+            detail.put("purchaseOrders", purchaseOrderMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.srm.SrmPurchaseOrder>()
+                .eq(org.ruoyi.system.domain.srm.SrmPurchaseOrder::getWorkOrderId, workOrderId)));
+            detail.put("receiptOrders", receiptOrderMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.wms.WmsReceiptOrder>()
+                .eq(org.ruoyi.system.domain.wms.WmsReceiptOrder::getWorkOrderId, workOrderId)));
+            detail.put("issueOrders", issueOrderMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.wms.WmsIssueOrder>()
+                .eq(org.ruoyi.system.domain.wms.WmsIssueOrder::getWorkOrderId, workOrderId)));
+
+            java.util.Map<Long, Object> inventoryByPart = new java.util.LinkedHashMap<>();
+            for (org.ruoyi.system.domain.engineering.EngineeringMaterial material : materials) {
+                if (material.getPartId() != null) {
+                    inventoryByPart.put(material.getPartId(), inventoryMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.wms.WmsInventory>()
+                        .eq(org.ruoyi.system.domain.wms.WmsInventory::getPartId, material.getPartId())));
+                }
+            }
+            detail.put("inventoryByPart", inventoryByPart);
+            workOrderDetails.add(detail);
+        }
+        result.put("workOrderDetails", workOrderDetails);
+        return toJson(result);
+    }
+
     @Tool("根据 CRM 合同生成 MES 生产工单草稿")
     public String crmContractGenerateWorkOrder(Long contractId, String productName, Integer quantity, Long responsibleUserId) {
         log.info("【XTP工具调用】crmContractGenerateWorkOrder contractId={}, productName={}, quantity={}, responsibleUserId={}",
@@ -43,6 +121,15 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
     public String mesWorkOrderQuery(Long workOrderId) {
         log.info("【XTP工具调用】mesWorkOrderQuery workOrderId={}", workOrderId);
         return toJson(SpringUtils.getBean(MesWorkOrderMapper.class).selectById(workOrderId));
+    }
+
+    @Tool("按合同ID查询 MES 生产工单，用于查看合同对应的制造闭环进度")
+    public String mesWorkOrderQueryByContractId(Long contractId) {
+        log.info("【XTP工具调用】mesWorkOrderQueryByContractId contractId={}", contractId);
+        return toJson(SpringUtils.getBean(MesWorkOrderMapper.class)
+            .selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<org.ruoyi.system.domain.mes.MesWorkOrder>()
+                .eq(org.ruoyi.system.domain.mes.MesWorkOrder::getContractId, contractId)
+                .orderByDesc(org.ruoyi.system.domain.mes.MesWorkOrder::getCreateTime)));
     }
 
     @Tool("更新工单阶段状态，状态可为 WAIT、PROCESSING、FINISHED、PAUSE")
@@ -128,8 +215,14 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
     }
 
     private String toJson(Object value) {
+        if (value == null) {
+            return "{\"data\":null,\"message\":\"未查询到数据\"}";
+        }
         try {
-            return JsonUtils.toJsonString(value);
+            String json = JsonUtils.toJsonString(value);
+            return json == null || json.isBlank()
+                ? "{\"data\":null,\"message\":\"未查询到数据\"}"
+                : json;
         } catch (Exception e) {
             log.error("XTP制造闭环工具返回值序列化失败", e);
             return "Error: " + e.getMessage();

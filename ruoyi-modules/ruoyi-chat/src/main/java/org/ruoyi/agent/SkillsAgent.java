@@ -30,6 +30,6 @@ public interface SkillsAgent {
         4. 如果需要参考文件，使用 read_skill_resource 读取
         """)
     @UserMessage("{{query}}")
-    @Agent("文档处理技能助手，支持 Word、PDF、Excel 文档的创建、编辑和分析")
+    @Agent(name = "skills", description = "文档处理技能助手，支持 Word、PDF、Excel 文档的创建、编辑和分析")
     String process(@V("query") String query);
 }

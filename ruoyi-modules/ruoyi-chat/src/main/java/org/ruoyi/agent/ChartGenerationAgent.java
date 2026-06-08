@@ -19,6 +19,6 @@ public interface ChartGenerationAgent {
             {valid JSON ECharts configuration}
             ```
             """)
-    @Agent("Generate Apache ECharts chart configurations only.")
+    @Agent(name = "chartGeneration", description = "Generate Apache ECharts chart configurations only.")
     String generateChart(@V("query") String query);
 }

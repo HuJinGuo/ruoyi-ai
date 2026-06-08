@@ -1,0 +1,447 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+      - generic [ref=e5]: Skip to main content
+    - link "Exclusive news, data and analytics for financial market professionals from LSEG." [ref=e12] [cursor=pointer]:
+      - /url: /differentiator/
+      - generic [ref=e13]:
+        - text: Learn more about
+        - generic [ref=e14]: Refinitiv
+      - img [ref=e16]
+    - banner [ref=e20]:
+      - generic [ref=e23]:
+        - link "Reuters home" [ref=e25] [cursor=pointer]:
+          - /url: /
+          - img [ref=e26]
+        - generic [ref=e29]:
+          - link "Subscribe" [ref=e30] [cursor=pointer]:
+            - /url: https://www.reuters.com/account/subscribe/offer/?redirect=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F&referrer=subscription_button&journeyStart=navigation
+          - button "Open search bar" [ref=e32] [cursor=pointer]:
+            - img [ref=e34]
+          - button "Menu" [ref=e37] [cursor=pointer]:
+            - img [ref=e39]
+    - generic [ref=e42]:
+      - main [ref=e43]:
+        - article [ref=e44]:
+          - generic [ref=e46]:
+            - generic [ref=e49]:
+              - heading "Oil prices rise more than $2 on Israel strikes on Lebanon" [level=1] [ref=e50]
+              - generic [ref=e51]:
+                - generic [ref=e52]:
+                  - text: By
+                  - link "Colleen Howe" [ref=e53] [cursor=pointer]:
+                    - /url: /authors/colleen-howe/
+                - time [ref=e54]: June 8, 2026 6:31 AM GMT+8 · Updated 56 mins ago
+                - generic [ref=e56]:
+                  - button "Save article Oil prices rise more than $2 on Israel strikes on Lebanon" [ref=e59] [cursor=pointer]:
+                    - img [ref=e61]
+                  - button "Change text size" [ref=e65] [cursor=pointer]:
+                    - img [ref=e68]
+                  - button "Share article" [ref=e72] [cursor=pointer]:
+                    - img [ref=e75]
+            - generic [ref=e78]:
+              - figure [ref=e79]:
+                - figure [ref=e80]:
+                  - img "Aftermath of an Israeli strike on the southern suburbs of Beirut" [ref=e83]
+                  - generic [ref=e85]:
+                    - text: Heavy machinery operates to remove the rubble in the aftermath of an Israeli strike on the southern suburbs of Beirut, Lebanon, June 7, 2026. REUTERS/Mohamed Azakir
+                    - link "Purchase Licensing Rights , opens new tab" [ref=e86] [cursor=pointer]:
+                      - /url: https://www.reutersconnect.com/item/aftermath-of-an-israeli-strike-on-the-southern-suburbs-of-beirut/dGFnOnJldXRlcnMuY29tLDIwMjY6bmV3c21sX1JDMjNQTEFEWUFQQw%3D%3D/?utm_medium=rcom-article-media&utm_campaign=rcom-rcp-lead
+                      - text: Purchase Licensing
+                      - generic [ref=e87]:
+                        - text: Rights
+                        - img [ref=e88]
+                        - generic [ref=e90]: ", opens new tab"
+              - generic [ref=e91]:
+                - generic [ref=e92]:
+                  - tablist [ref=e94]:
+                    - tab "Summary" [selected] [ref=e95] [cursor=pointer]
+                  - list [ref=e97]:
+                    - listitem [ref=e98]: Israel strikes on Beirut raise concerns over US-Iran peace deal and Hormuz reopening
+                    - listitem [ref=e99]: Iran retaliates with missile attacks on Israel, Trump urges Netanyahu not to respond
+                    - listitem [ref=e100]: OPEC+ agrees to output hike, but analysts say impact limited by supply constraints
+                - generic [ref=e101]:
+                  - text: BEIJING, June 8 (Reuters) - Oil prices were up more than $2 a barrel on Monday after Israel on Sunday launched renewed
+                  - link "strikes" [ref=e102] [cursor=pointer]:
+                    - /url: https://www.reuters.com/world/asia-pacific/us-eyes-iranian-assets-gulf-allies-reconstruction-source-says-2026-06-06/
+                  - text: on Lebanon despite a truce between the two countries, eroding hopes for an end to the wider war and a restart to crude flows through the Strait of Hormuz.
+                - generic [ref=e103]: U.S. crude futures were up $2.10, or 2.32%, at $92.64 per barrel as of 0013 GMT, while Brent crude futures ⁠rose $2.33, or 2.5%, to $95.42 a barrel.
+                - paragraph [ref=e104]:
+                  - text: The Reuters Power Up newsletter provides everything you need to know about the global energy industry. Sign up
+                  - link "here." [ref=e105] [cursor=pointer]:
+                    - /url: /newsletters/reuters-power-up/?location=article-paragraph&redirectUrl=%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=e114]:
+                  - application "Connatix video player" [ref=e116]
+                  - generic [ref=e117]:
+                    - button "Play (SPACE)" [ref=e121] [cursor=pointer]:
+                      - img [ref=e124]
+                    - generic [ref=e127]:
+                      - generic [ref=e129]:
+                        - generic:
+                          - timer
+                      - slider [ref=e135] [cursor=pointer]: "50"
+                      - generic [ref=e137]:
+                        - generic:
+                          - timer
+                    - generic [ref=e138]:
+                      - button [ref=e140] [cursor=pointer]:
+                        - img [ref=e142]
+                      - button [ref=e145] [cursor=pointer]:
+                        - img [ref=e148]
+                      - button [ref=e151] [cursor=pointer]:
+                        - img [ref=e153]
+                      - button [ref=e158] [cursor=pointer]:
+                        - img [ref=e161]
+                      - button [ref=e165] [cursor=pointer]:
+                        - img [ref=e168]
+                      - button [ref=e173] [cursor=pointer]:
+                        - img [ref=e176]
+                      - button [ref=e179] [cursor=pointer]:
+                        - img [ref=e182]
+                  - text: "Coming up:"
+                  - generic:
+                    - iframe [ref=e186]:
+                      
+                    - iframe [ref=e187]:
+                      
+                    - iframe [ref=e188]:
+                      
+                - generic [ref=e190]:
+                  - text: That erased most of the losses from Friday, when prices had
+                  - link "fallen" [ref=e191] [cursor=pointer]:
+                    - /url: https://www.reuters.com/business/energy/oil-little-changed-uncertainty-over-us-iran-peace-deal-2026-06-05/
+                  - text: on mounting hopes of a deescalation in the U.S.-Iran conflict, which started with U.S. and Israel strikes on Iran in February.
+                - generic [ref=e192]: The latest strikes appeared to present yet another barrier to a U.S.-Iran peace deal and the reopening of the Strait of Hormuz, a key conduit for global oil and gas flows. Iran has made a ceasefire with Lebanon a condition for a peace deal with Washington.
+                - generic [ref=e196]: Advertisement · Scroll to continue
+                - generic [ref=e197]: Iran retaliated for the Beirut strikes on its ally Hezbollah by launching missiles at Israel. U.S. President Donald Trump said he would tell ‌Israeli Prime ⁠Minister Benjamin Netanyahu not to retaliate at Iran.
+                - generic [ref=e198]:
+                  - text: Israel had invaded Lebanon in March after Iran-backed Hezbollah fired rockets and drones across the border. Lebanon and Israel said on June 3 that they had agreed to a
+                  - link "ceasefire" [ref=e199] [cursor=pointer]:
+                    - /url: https://www.reuters.com/world/middle-east/israel-lebanon-say-they-agree-ceasefire-2026-06-03/
+                  - text: following negotiations in Washington.
+                - generic [ref=e203]: Advertisement · Scroll to continue
+                - generic [ref=e204]: The two countries had previously agreed to a cessation of hostilities in April but violence continued.
+                - generic [ref=e205]: The wider war ⁠has been on pause since the U.S. and Israel halted their attacks on Iran in early April, but with Tehran continuing to block most shipping through the Strait of Hormuz.
+                - generic [ref=e206]:
+                  - text: Amid the resulting supply crisis,
+                  - link "OPEC+" [ref=e207] [cursor=pointer]:
+                    - /url: https://www.reuters.com/business/energy/opec-set-fourth-oil-quota-hike-since-hormuz-closure-sources-say-2026-06-07/
+                  - text: on Sunday agreed its ⁠fourth increase in oil output in four months. But analysts said the decision would have little impact since most OPEC+ members could not meet their output targets because of the Hormuz closure or, in the ⁠case of Russia, infrastructure attacks that have eroded its production capacity.
+                - generic [ref=e211]: Advertisement · Scroll to continue
+                - generic [ref=e212]: "\"In the current market, the physical impact of such a decision would be close to zero,\" Rystad Energy head of geopolitical analysis Jorge Leon said in a note."
+                - iframe [ref=e216]:
+                  - generic [ref=f226e3]:
+                    - generic [ref=f226e5]:
+                      - heading "Sponsored Content" [level=2] [ref=f226e6]
+                      - generic [ref=f226e7]:
+                        - link "Dianomi Logo" [ref=f226e8] [cursor=pointer]:
+                          - /url: https://www.dianomi.com/whats-this/?utm_source=pub.Reuters&utm_medium=smartad_sponsor_link
+                          - img "Dianomi Logo" [ref=f226e9]
+                        - link "Advertise Here" [ref=f226e10] [cursor=pointer]:
+                          - /url: https://www.dianomi.com/whats-this/?utm_source=pub.Reuters&utm_medium=smartad_sponsor_link
+                        - link "Your Ad Choices Logo" [ref=f226e12] [cursor=pointer]:
+                          - /url: https://www.dianomi.com/legal/privacy.epl
+                          - img "Your Ad Choices Logo" [ref=f226e13]
+                    - iframe [ref=f226e15]:
+                      
+                - paragraph [ref=e218]: Reporting by Colleen Howe; Editing by Edmund Klamann and Christopher Cushing
+                - paragraph [ref=e219]:
+                  - text: "Our Standards:"
+                  - link "The Thomson Reuters Trust Principles. , opens new tab" [ref=e220] [cursor=pointer]:
+                    - /url: https://www.thomsonreuters.com/en/about-us/trust-principles.html
+                    - text: The Thomson Reuters Trust Principles.
+                    - img [ref=e221]
+                    - generic [ref=e223]: ", opens new tab"
+                - navigation "Tags" [ref=e224]:
+                  - list [ref=e225]:
+                    - listitem [ref=e226]: "Suggested Topics:"
+                    - listitem [ref=e227]:
+                      - link "Energy category" [ref=e228] [cursor=pointer]:
+                        - /url: /business/energy/
+                        - generic [ref=e230]: Energy
+                    - listitem [ref=e231]:
+                      - link "Fuel Oil" [ref=e232] [cursor=pointer]:
+                        - /url: /business/energy/fuel-oil/
+                        - generic [ref=e234]: Fuel Oil
+                      - button "Fuel Oil quick links" [ref=e235]:
+                        - img [ref=e236]
+                    - listitem [ref=e238]:
+                      - link "Transport Fuels" [ref=e239] [cursor=pointer]:
+                        - /url: /business/energy/transport-fuels/
+                        - generic [ref=e241]: Transport Fuels
+                      - button "Transport Fuels quick links" [ref=e242]:
+                        - img [ref=e243]
+                - link "Purchase Licensing Rights" [ref=e246] [cursor=pointer]:
+                  - /url: https://www.reutersagency.com/en/licensereuterscontent/?utm_medium=rcom-article-media&utm_campaign=rcom-rcp-lead
+                  - generic [ref=e248]: Purchase Licensing Rights
+          - generic [ref=e251]:
+            - heading "Read Next" [level=2] [ref=e253]
+            - list [ref=e255]:
+              - listitem [ref=e256]:
+                - generic [ref=e257]:
+                  - time [ref=e258]: 1 min ago
+                  - link "Energy category" [ref=e260] [cursor=pointer]:
+                    - /url: /business/energy/
+                    - text: Energy
+                    - generic [ref=e261]: category
+                  - link "Saudi Arabia sharply cuts July OSP for Asia amid slow demand" [ref=e263] [cursor=pointer]:
+                    - /url: /business/energy/saudi-arabia-sharply-cuts-july-osp-asia-amid-slow-demand-2026-06-08/
+                    - generic [ref=e264]: Saudi Arabia sharply cuts July OSP for Asia amid slow demand
+                  - figure [ref=e265]:
+                    - link [ref=e266] [cursor=pointer]:
+                      - /url: /business/energy/saudi-arabia-sharply-cuts-july-osp-asia-amid-slow-demand-2026-06-08/
+              - listitem [ref=e269]:
+                - generic [ref=e270]:
+                  - time [ref=e271]: June 6, 2026
+                  - link "World at Work category" [ref=e273] [cursor=pointer]:
+                    - /url: /business/world-at-work/
+                    - text: World at Work
+                    - generic [ref=e274]: category
+                  - link "Norway oil companies, unions agree wage deal, averting strike" [ref=e276] [cursor=pointer]:
+                    - /url: /business/world-at-work/norway-oil-companies-unions-agree-wage-deal-averting-strike-2026-06-05/
+                    - generic [ref=e277]: Norway oil companies, unions agree wage deal, averting strike
+                  - figure [ref=e278]:
+                    - link [ref=e279] [cursor=pointer]:
+                      - /url: /business/world-at-work/norway-oil-companies-unions-agree-wage-deal-averting-strike-2026-06-05/
+              - listitem [ref=e282]:
+                - generic [ref=e283]:
+                  - time [ref=e284]: June 7, 2026
+                  - link "Energy category" [ref=e286] [cursor=pointer]:
+                    - /url: /business/energy/
+                    - text: Energy
+                    - generic [ref=e287]: category
+                  - link "US gives Hungary's MOL more time for talks to buy Serbian oil firm NIS" [ref=e289] [cursor=pointer]:
+                    - /url: /business/energy/us-gives-hungarys-mol-more-time-talks-buy-serbian-oil-firm-nis-2026-06-06/
+                    - generic [ref=e290]: US gives Hungary's MOL more time for talks to buy Serbian oil firm NIS
+                  - figure [ref=e291]:
+                    - link [ref=e292] [cursor=pointer]:
+                      - /url: /business/energy/us-gives-hungarys-mol-more-time-talks-buy-serbian-oil-firm-nis-2026-06-06/
+              - listitem [ref=e295]:
+                - generic [ref=e296]:
+                  - time [ref=e297]: 3 hours ago
+                  - link "Energy category" [ref=e299] [cursor=pointer]:
+                    - /url: /business/energy/
+                    - text: Energy
+                    - generic [ref=e300]: category
+                  - link "China dominates low-carbon industrial projects, US lags, report says" [ref=e302] [cursor=pointer]:
+                    - /url: /business/energy/china-dominates-low-carbon-industrial-projects-us-lags-report-says-2026-06-07/
+                    - generic [ref=e303]: China dominates low-carbon industrial projects, US lags, report says
+                  - figure [ref=e304]:
+                    - link [ref=e305] [cursor=pointer]:
+                      - /url: /business/energy/china-dominates-low-carbon-industrial-projects-us-lags-report-says-2026-06-07/
+      - generic [ref=e309]:
+        - generic:
+          - link:
+            - /url: https://www.lseg.com/en/data-analytics/products/workspace?utm_source=reuters.com&utm_medium=articlebanner&utm_campaign=Reuters_ProductPage_Links
+      - generic [ref=e310]:
+        - iframe [ref=e313]:
+          - generic [ref=f227e3]:
+            - generic [ref=f227e5]:
+              - heading "Sponsored Content" [level=2] [ref=f227e6]
+              - generic [ref=f227e7]:
+                - link "Dianomi Logo" [ref=f227e8] [cursor=pointer]:
+                  - /url: https://www.dianomi.com/whats-this/?utm_source=pub.reuters_advertisehere&utm_medium=smartad_sponsor_link
+                  - img "Dianomi Logo" [ref=f227e9]
+                - link "Advertise Here" [ref=f227e10] [cursor=pointer]:
+                  - /url: https://www.dianomi.com/whats-this/?utm_source=pub.reuters_advertisehere&utm_medium=smartad_sponsor_link
+                - link "Your Ad Choices Logo" [ref=f227e12] [cursor=pointer]:
+                  - /url: https://www.dianomi.com/legal/privacy.epl
+                  - img "Your Ad Choices Logo" [ref=f227e13]
+            - iframe [ref=f227e15]:
+              
+        - iframe [ref=e316]:
+          - iframe [ref=f228e5]:
+            - generic [ref=f271e2]:
+              - heading "Sponsored Content" [level=2] [ref=f271e3]
+              - generic [ref=f271e4]:
+                - link "Dianomi Logo" [ref=f271e5] [cursor=pointer]:
+                  - /url: https://www.dianomi.com/whats-this/?utm_source=pub.reuters_advertisehere&utm_medium=smartad_sponsor_link
+                  - img "Dianomi Logo" [ref=f271e6]
+                - link "Advertise Here" [ref=f271e7] [cursor=pointer]:
+                  - /url: https://www.dianomi.com/whats-this/?utm_source=pub.reuters_advertisehere&utm_medium=smartad_sponsor_link
+                - link "Your Ad Choices Logo" [ref=f271e9] [cursor=pointer]:
+                  - /url: https://www.dianomi.com/legal/privacy.epl
+                  - img "Your Ad Choices Logo" [ref=f271e10]
+              - link "Build your career alongside founders, engineers, and investors. Sponsored by UC Berkeley Haas" [ref=f271e13] [cursor=pointer]:
+                - /url: https://www.dianomi.com/click.epl?pn=151518&offer=38778265&savid=396289&unique_id=aiYwar-iR2q9p_YKDy875QAAAAo&adv=12715&epoch=1780887658&said=10165&cf=545.1479.Reuters&smartreferer=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=f271e14]:
+                  - generic [ref=f271e15]: Build your career alongside founders, engineers, and investors.
+                  - generic [ref=f271e16]: Sponsored by UC Berkeley Haas
+              - link "Some people are born to trade. TradeStation was built for them. Sponsored by TradeStation" [ref=f271e19] [cursor=pointer]:
+                - /url: https://www.dianomi.com/click.epl?pn=140288&offer=37843036&savid=389993&unique_id=aiYwar-iR2q9p_YKDy875QAAAAo&adv=12715&epoch=1780887658&said=10165&cf=545.1479.Reuters&smartreferer=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=f271e20]:
+                  - generic [ref=f271e21]: Some people are born to trade. TradeStation was built for them.
+                  - generic [ref=f271e22]: Sponsored by TradeStation
+              - link "9 Things To Do If Your Full-Time Job Isn't Enough To Pay Off Debt Sponsored by FinanceBuzz" [ref=f271e25] [cursor=pointer]:
+                - /url: https://www.dianomi.com/click.epl?pn=145388&offer=36999798&savid=375256&unique_id=aiYwar-iR2q9p_YKDy875QAAAAo&adv=12715&epoch=1780887658&said=10165&cf=545.1479.Reuters&smartreferer=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=f271e26]:
+                  - generic [ref=f271e27]: 9 Things To Do If Your Full-Time Job Isn't Enough To Pay Off Debt
+                  - generic [ref=f271e28]: Sponsored by FinanceBuzz
+              - 'link "\"This is the #1 Stock to Buy Before the SpaceX IPO.\" -Dr. Skousen Sponsored by The Oxford Club" [ref=f271e31] [cursor=pointer]':
+                - /url: https://www.dianomi.com/click.epl?pn=149707&offer=38296137&savid=397686&unique_id=aiYwar-iR2q9p_YKDy875QAAAAo&adv=12715&epoch=1780887658&said=10165&cf=545.1479.Reuters&smartreferer=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=f271e32]:
+                  - generic [ref=f271e33]: "\"This is the #1 Stock to Buy Before the SpaceX IPO.\" -Dr. Skousen"
+                  - generic [ref=f271e34]: Sponsored by The Oxford Club
+              - link "Over $70B in Unclaimed Funds in U.S. Enter Name & State. Sponsored by BeenVerified" [ref=f271e37] [cursor=pointer]:
+                - /url: https://www.dianomi.com/click.epl?pn=150203&offer=38437219&savid=394856&unique_id=aiYwar-iR2q9p_YKDy875QAAAAo&adv=12715&epoch=1780887658&said=10165&cf=545.1479.Reuters&smartreferer=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=f271e38]:
+                  - generic [ref=f271e39]: Over $70B in Unclaimed Funds in U.S. Enter Name & State.
+                  - generic [ref=f271e40]: Sponsored by BeenVerified
+              - link "Automation. Data. Experience. Access the end-to-end mortgage ecosystem Sponsored by ICE" [ref=f271e43] [cursor=pointer]:
+                - /url: https://www.dianomi.com/click.epl?pn=149950&offer=38495792&savid=391114&unique_id=aiYwar-iR2q9p_YKDy875QAAAAo&adv=12715&epoch=1780887658&said=10165&cf=545.1479.Reuters&smartreferer=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F
+                - generic [ref=f271e44]:
+                  - generic [ref=f271e45]: Automation. Data. Experience. Access the end-to-end mortgage ecosystem
+                  - generic [ref=f271e46]: Sponsored by ICE
+        - generic [ref=e317]:
+          - heading "Business" [level=2] [ref=e319]:
+            - link "Business" [ref=e320] [cursor=pointer]:
+              - /url: /business/
+              - text: Business
+              - img [ref=e322]
+          - list [ref=e324]:
+            - listitem [ref=e325]:
+              - generic [ref=e326]:
+                - link [ref=e328] [cursor=pointer]:
+                  - /url: https://www.reuters.com/world/india/rupees-rbi-spurred-rally-blunted-by-equity-rout-iran-us-setback-2026-06-08/
+                - generic [ref=e332]:
+                  - heading "Rupee's RBI-spurred rally blunted by equity rout, Iran-US setback" [level=3] [ref=e333]:
+                    - link "Rupee's RBI-spurred rally blunted by equity rout, Iran-US setback" [ref=e334] [cursor=pointer]:
+                      - /url: https://www.reuters.com/world/india/rupees-rbi-spurred-rally-blunted-by-equity-rout-iran-us-setback-2026-06-08/
+                  - generic [ref=e335]:
+                    - link "category":
+                      - /url: /world/
+                      - generic [ref=e336] [cursor=pointer]: category
+                    - text: ·
+                    - time [ref=e337]: June 8, 2026 · 10:53 AM GMT+8
+                    - text: · 7 mins ago
+                  - paragraph [ref=e338]: The Indian rupee is poised to weaken at Monday's open, with the selloff in Asian equities and fading hopes of a U.S.-Iran peace deal undermining the central bank-supported rally.
+            - listitem [ref=e339]:
+              - generic [ref=e340]:
+                - generic [ref=e341]:
+                  - link "Business category" [ref=e343] [cursor=pointer]:
+                    - /url: /business/
+                    - text: Business
+                    - generic [ref=e344]: category
+                  - heading "Indian shares set to fall as oil spike, Asia selloff hurt sentiment" [level=3] [ref=e345]:
+                    - link "Indian shares set to fall as oil spike, Asia selloff hurt sentiment" [ref=e346] [cursor=pointer]:
+                      - /url: https://www.reuters.com/business/indian-shares-set-fall-oil-spike-asia-selloff-hurt-sentiment-2026-06-08/
+                  - time [ref=e348]: 18 mins ago
+                - link [ref=e349] [cursor=pointer]:
+                  - /url: https://www.reuters.com/business/indian-shares-set-fall-oil-spike-asia-selloff-hurt-sentiment-2026-06-08/
+            - listitem [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - link "Asia Pacific category" [ref=e357] [cursor=pointer]:
+                    - /url: /world/asia-pacific/
+                    - text: Asia Pacific
+                    - generic [ref=e358]: category
+                  - heading "Nvidia CEO says company is working with LG on humanoid robots and data centers" [level=3] [ref=e359]:
+                    - link "Nvidia CEO says company is working with LG on humanoid robots and data centers" [ref=e360] [cursor=pointer]:
+                      - /url: https://www.reuters.com/world/asia-pacific/nvidia-ceo-says-company-is-working-with-lg-humanoid-robots-data-centers-2026-06-08/
+                  - time [ref=e362]: 23 mins ago
+                - link [ref=e363] [cursor=pointer]:
+                  - /url: https://www.reuters.com/world/asia-pacific/nvidia-ceo-says-company-is-working-with-lg-humanoid-robots-data-centers-2026-06-08/
+            - listitem [ref=e367]:
+              - generic [ref=e368]:
+                - generic [ref=e369]:
+                  - generic:
+                    - link "category":
+                      - /url: /world/
+                      - generic [ref=e370] [cursor=pointer]: category
+                  - heading "Gold extends losses on US interest rate-hike fears" [level=3] [ref=e371]:
+                    - link "Gold extends losses on US interest rate-hike fears" [ref=e372] [cursor=pointer]:
+                      - /url: https://www.reuters.com/world/india/gold-extends-losses-us-interest-rate-hike-fears-2026-06-08/
+                  - time [ref=e374]: 1 hour ago
+                - link [ref=e375] [cursor=pointer]:
+                  - /url: https://www.reuters.com/world/india/gold-extends-losses-us-interest-rate-hike-fears-2026-06-08/
+            - listitem [ref=e379]:
+              - generic [ref=e380]:
+                - generic [ref=e381]:
+                  - link "India category" [ref=e383] [cursor=pointer]:
+                    - /url: /world/india/
+                    - text: India
+                    - generic [ref=e384]: category
+                  - heading "India Inc hikes prices, shrinks packs as Iran war squeezes margins" [level=3] [ref=e385]:
+                    - link "India Inc hikes prices, shrinks packs as Iran war squeezes margins" [ref=e386] [cursor=pointer]:
+                      - /url: https://www.reuters.com/world/india/india-inc-hikes-prices-shrinks-packs-iran-war-squeezes-margins-2026-06-08/
+                  - time [ref=e388]: 1 hour ago
+                - link [ref=e389] [cursor=pointer]:
+                  - /url: https://www.reuters.com/world/india/india-inc-hikes-prices-shrinks-packs-iran-war-squeezes-margins-2026-06-08/
+        - iframe [ref=e395]:
+          - iframe [ref=f229e5]:
+            
+  - iframe
+  - dialog "Subscribe to Reuters to continue reading." [active] [ref=e397]:
+    - generic [ref=e399]:
+      - heading "Subscribe to Reuters to continue reading." [level=1] [ref=e400]
+      - radiogroup [ref=e402]:
+        - 'button "Select offer: $1 per week Plus applicable taxes. Charged as $4 in advance every 4 weeks." [ref=e404] [cursor=pointer]':
+          - radio "Final price $1per week" [checked]
+          - generic [ref=e405]:
+            - generic [ref=e406]:
+              - generic [ref=e407]:
+                - generic [ref=e408]: Final price
+                - text: $1
+              - text: per week
+            - paragraph [ref=e409]: Plus applicable taxes. Charged as $4 in advance every 4 weeks.
+          - button "Subscribe" [ref=e411]:
+            - generic [ref=e413]: Subscribe
+        - generic [ref=e414]:
+          - generic [ref=e415]: BEST VALUE
+          - 'button "Select offer: $45 per year Plus applicable taxes. Charged as $45 in advance annually. BEST VALUE" [ref=e416] [cursor=pointer]':
+            - radio "Final price $45per year"
+            - generic [ref=e417]:
+              - generic [ref=e418]:
+                - generic [ref=e419]:
+                  - generic [ref=e420]: Final price
+                  - text: $45
+                - text: per year
+              - paragraph [ref=e421]: Plus applicable taxes. Charged as $45 in advance annually.
+            - button "Subscribe" [ref=e423]:
+              - generic [ref=e425]: Subscribe
+      - list [ref=e426]:
+        - listitem [ref=e427]:
+          - img [ref=e429]
+          - generic [ref=e431]: Unlimited access to Reuters.com
+        - listitem [ref=e432]:
+          - img [ref=e434]
+          - generic [ref=e436]: The Week Ahead, our subscriber-only newsletter
+        - listitem [ref=e437]:
+          - img [ref=e439]
+          - generic [ref=e441]: Subscribers get fewer ads
+      - generic [ref=e442]:
+        - paragraph [ref=e443]:
+          - link "Learn more about subscriptions , opens new tab" [ref=e444] [cursor=pointer]:
+            - /url: https://www.reuters.com/info-pages/subscription-faq/
+            - text: Learn more about
+            - generic [ref=e445]:
+              - text: subscriptions
+              - img [ref=e446]
+              - generic [ref=e448]: ", opens new tab"
+        - paragraph [ref=e449]:
+          - text: You can cancel anytime. Cancellations take effect at the end of your then-current subscription period. Your subscription will renew automatically unless you cancel at least 2 days before the renewal date.
+          - link "Terms & Conditions , opens new tab" [ref=e450] [cursor=pointer]:
+            - /url: https://www.reuters.com/info-pages/terms-of-use/
+            - text: Terms &
+            - generic [ref=e451]:
+              - text: Conditions
+              - img [ref=e452]
+              - generic [ref=e454]: ", opens new tab"
+          - text: apply, including the cancellation policy, and
+          - link "Privacy Statement , opens new tab" [ref=e455] [cursor=pointer]:
+            - /url: https://www.thomsonreuters.com/en/privacy-statement.html
+            - text: Privacy
+            - generic [ref=e456]:
+              - text: Statement
+              - img [ref=e457]
+              - generic [ref=e459]: ", opens new tab"
+      - generic [ref=e460]:
+        - paragraph [ref=e461]:
+          - text: Already subscribed?
+          - link "Sign in" [ref=e462] [cursor=pointer]:
+            - /url: https://www.reuters.com/account/sign-in/?redirect=https%3A%2F%2Fwww.reuters.com%2Fbusiness%2Fenergy%2Foil-prices-rise-more-than-2-israel-strikes-lebanon-2026-06-07%2F&referrer=subscription_paywall_article
+        - paragraph [ref=e463]:
+          - text: Go to
+          - link "Homepage" [ref=e464] [cursor=pointer]:
+            - /url: https://www.reuters.com

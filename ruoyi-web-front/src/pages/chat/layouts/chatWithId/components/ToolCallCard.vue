@@ -142,39 +142,36 @@ const formattedResult = computed(() => {
 <style scoped lang="scss">
 .tool-call-card {
   background-color: #ffffff;
-  border: 1px solid #e4e7ed;
+  border: 1px solid transparent;
   border-radius: 8px;
   overflow: hidden;
-  margin: 8px 0;
+  margin: 0;
   font-size: 13px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 
   &:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
   }
 
   &.expanded {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f8fafc;
+    border-color: #dbe4ef;
   }
 
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
+    padding: 8px 10px;
     cursor: pointer;
     user-select: none;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: #f5f7fa;
-    }
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       flex: 1;
       min-width: 0;
 
@@ -182,17 +179,18 @@ const formattedResult = computed(() => {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(135deg, #5f7bdc 0%, #5a47b8 100%);
         border-radius: 6px;
         color: #ffffff;
         flex-shrink: 0;
+        box-shadow: 0 6px 14px rgb(90 71 184 / 22%);
       }
 
       .tool-name {
-        font-weight: 500;
-        color: #303133;
+        font-weight: 650;
+        color: #273142;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -202,9 +200,11 @@ const formattedResult = computed(() => {
         display: flex;
         align-items: center;
         gap: 4px;
-        border-radius: 4px;
-        padding: 2px 8px;
+        height: 22px;
+        border-radius: 6px;
+        padding: 0 8px;
         font-size: 12px;
+        font-weight: 650;
         flex-shrink: 0;
 
         .status-text {
@@ -221,11 +221,11 @@ const formattedResult = computed(() => {
 
       .call-time {
         font-size: 12px;
-        color: #909399;
+        color: #8a93a3;
       }
 
       .expand-icon {
-        color: #909399;
+        color: #8a93a3;
         transition: transform 0.3s ease;
 
         &.rotated {
@@ -236,32 +236,32 @@ const formattedResult = computed(() => {
   }
 
   .card-content {
-    padding: 0 12px 12px;
-    border-top: 1px solid #ebeef5;
+    padding: 0 10px 10px 45px;
+    border-top: 0;
 
     .result-section {
-      margin-top: 12px;
+      margin-top: 2px;
 
       .section-label {
         font-size: 12px;
-        color: #909399;
-        margin-bottom: 8px;
-        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 6px;
+        font-weight: 650;
       }
 
       .result-content {
-        background-color: #f5f7fa;
+        background-color: #0f172a;
         border-radius: 6px;
         padding: 10px 12px;
-        max-height: 300px;
+        max-height: 240px;
         overflow: auto;
 
         pre {
           margin: 0;
           font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
           font-size: 12px;
-          line-height: 1.5;
-          color: #303133;
+          line-height: 1.55;
+          color: #dbeafe;
           white-space: pre-wrap;
           word-break: break-word;
         }
@@ -271,9 +271,9 @@ const formattedResult = computed(() => {
     .pending-hint {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 8px;
-      padding: 16px;
+      padding: 10px 0 2px;
       color: #E6A23C;
 
       .is-loading {
@@ -282,9 +282,8 @@ const formattedResult = computed(() => {
     }
 
     .no-result {
-      text-align: center;
-      padding: 16px;
-      color: #909399;
+      padding: 10px 0 2px;
+      color: #8a93a3;
       font-size: 12px;
     }
   }

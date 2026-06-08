@@ -34,6 +34,6 @@ public interface SqlAgent {
     @UserMessage("""
         Answer the following question: {{query}}
         """)
-    @Agent("Intelligent database query assistant that MUST check database tables first, then query table structures and execute SQL queries")
+    @Agent(name = "sqlQuery", description = "Intelligent database query assistant that MUST check database tables first, then query table structures and execute SQL queries")
     String getData(@V("query") String query);
 }

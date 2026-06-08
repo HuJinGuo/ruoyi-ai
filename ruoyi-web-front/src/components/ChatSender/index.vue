@@ -288,16 +288,20 @@ defineExpose({
 // prefix 容器
 .sender-prefix-container {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   width: 100%;
   gap: 8px;
+  min-width: 0;
 }
 
 // 左侧按钮组
 .left-buttons {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 // 统一按钮样式
@@ -470,6 +474,16 @@ defineExpose({
   &:active {
     color: #c81d1d;
     background-color: #fde2e2;
+  }
+}
+
+@media (max-width: 640px) {
+  .sender-prefix-container {
+    align-items: flex-start;
+  }
+
+  .left-buttons {
+    width: 100%;
   }
 }
 </style>
