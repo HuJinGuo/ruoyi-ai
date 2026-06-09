@@ -12,7 +12,7 @@ export interface ToolCallInfo {
   result: unknown;
   /** 调用时间戳 */
   timestamp: number;
-  /** 类型：AGENT / TOOL / GUARD / MODEL */
+  /** 类型：AGENT / TOOL / GUARD / MODEL / LOG */
   type?: string;
   /** 运行 ID */
   runId?: string;

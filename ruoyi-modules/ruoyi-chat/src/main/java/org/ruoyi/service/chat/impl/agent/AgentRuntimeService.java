@@ -151,10 +151,7 @@ public class AgentRuntimeService {
             List<Object> subAgents = new ArrayList<>();
 
             String supervisorInput = buildAgentConversationInput(chatRequest);
-            sendAgentTrace(emitter, "agent_plan", Map.of(
-                "runId", runId,
-                "steps", profile.planSteps()
-            ));
+            sendAgentTrace(emitter, "agent_plan", planPayload(runId, profile));
             if (profile.canRunDirectly()) {
                 CompletableFuture.runAsync(() -> executeDirectAgent(
                     buildDirectBusinessAgent(profile, plannerModel, userId, runId, emitter),
@@ -245,9 +242,26 @@ public class AgentRuntimeService {
                                     SseEmitter emitter, List<McpClient> mcpClients) {
         try {
             AgentTraceContext.set(userId, runId, emitter);
-            sendAgentTrace(emitter, "agent_step_start", tracePayload(runId, "direct-agent", "单业务域直连", "AGENT", "running", null));
+            AgentTraceContext.enterStep("direct-agent", "单业务域直连");
+            sendAgentTrace(emitter, "agent_step_start", tracePayload(
+                runId,
+                "direct-agent",
+                "单业务域直连",
+                "AGENT",
+                "running",
+                null,
+                "正在直连最匹配的业务 Agent"
+            ));
             String result = directAgent.apply(input);
-            sendAgentTrace(emitter, "agent_step_done", tracePayload(runId, "direct-agent", "单业务域直连", "AGENT", "success", "已跳过 Supervisor，直连完成"));
+            sendAgentTrace(emitter, "agent_step_done", tracePayload(
+                runId,
+                "direct-agent",
+                "单业务域直连",
+                "AGENT",
+                "success",
+                summarizeAgentOutput("单业务域直连", result),
+                "业务 Agent 已完成直连查询"
+            ));
             streamContent(emitter, result);
             saveChatMessage(userId, chatRequest.getSessionId(), result, RoleType.ASSISTANT.getName(), chatRequest.getModel());
             sendAgentTrace(emitter, "agent_run_done", Map.of(
@@ -260,7 +274,7 @@ public class AgentRuntimeService {
         } catch (Exception e) {
             String errorMessage = resolveErrorMessage(e);
             log.error("Direct Agent 执行失败", e);
-            sendAgentTrace(emitter, "agent_step_done", tracePayload(runId, "direct-agent", "单业务域直连", "AGENT", "error", errorMessage));
+            sendAgentTrace(emitter, "agent_step_done", tracePayload(runId, "direct-agent", "单业务域直连", "AGENT", "error", errorMessage, "业务 Agent 直连查询失败"));
             sendAgentTrace(emitter, "agent_run_done", Map.of(
                 "runId", runId,
                 "assistantCode", assistantCode,
@@ -269,6 +283,7 @@ public class AgentRuntimeService {
             ));
             SseMessageUtils.sendError(emitter, errorMessage);
         } finally {
+            AgentTraceContext.clearStep("direct-agent");
             AgentTraceContext.clear();
             closeMcpClientsQuietly(mcpClients);
             SseMessageUtils.completeConnection(userId, tokenValue);
@@ -279,20 +294,81 @@ public class AgentRuntimeService {
                                                  ChatRequest chatRequest, Long userId, String tokenValue, String runId,
                                                  SseEmitter emitter, List<McpClient> mcpClients) {
         List<BusinessAgentResult> results = new ArrayList<>();
+        String currentStepId = null;
+        String currentStepName = null;
+        String currentStepType = "AGENT";
         try {
             AgentTraceContext.set(userId, runId, emitter);
             for (BusinessAgentInvoker invoker : invokers) {
-                String stepId = "business-" + invoker.domain().name().toLowerCase(Locale.ROOT);
-                sendAgentTrace(emitter, "agent_step_start", tracePayload(runId, stepId, invoker.domain().displayName(), "AGENT", "running", null));
                 String stepInput = buildSequentialStepInput(input, results);
+                String stepId = "business-" + invoker.domain().name().toLowerCase(Locale.ROOT);
+                currentStepId = stepId;
+                currentStepName = invoker.domain().displayName();
+                currentStepType = "AGENT";
+                AgentTraceContext.enterStep(stepId, currentStepName);
+                sendAgentTrace(emitter, "agent_step_start", tracePayload(
+                    runId,
+                    stepId,
+                    currentStepName,
+                    "AGENT",
+                    "running",
+                    null,
+                    sequentialStartMessage(invoker.domain(), results)
+                ));
+                if (!results.isEmpty()) {
+                    sendAgentTrace(emitter, "agent_step_log", tracePayload(
+                        runId,
+                        stepId,
+                        currentStepName,
+                        "AGENT",
+                        "running",
+                        sequentialHandoffSummary(results),
+                        "已整理前序业务线索，准备交给" + currentStepName
+                    ));
+                }
                 String output = invoker.invoke(stepInput);
                 results.add(new BusinessAgentResult(invoker.domain(), output));
-                sendAgentTrace(emitter, "agent_step_done", tracePayload(runId, stepId, invoker.domain().displayName(), "AGENT", "success", truncate(output, 800)));
+                String summary = summarizeBusinessAgentResult(invoker.domain(), output);
+                sendAgentTrace(emitter, "agent_step_done", tracePayload(
+                    runId,
+                    stepId,
+                    currentStepName,
+                    "AGENT",
+                    "success",
+                    summary,
+                    sequentialDoneMessage(invoker.domain(), summary)
+                ));
+                AgentTraceContext.clearStep(stepId);
+                currentStepId = null;
+                currentStepName = null;
             }
 
-            sendAgentTrace(emitter, "agent_step_start", tracePayload(runId, "business-final-synthesis", "综合分析整理", "MODEL", "running", null));
-            String result = streamFinalSynthesis(chatRequest, input, results, emitter);
-            sendAgentTrace(emitter, "agent_step_done", tracePayload(runId, "business-final-synthesis", "综合分析整理", "MODEL", "success", "已根据用户问题完成综合整理"));
+            currentStepId = "business-final-synthesis";
+            currentStepName = "综合分析整理";
+            currentStepType = "MODEL";
+            AgentTraceContext.enterStep(currentStepId, currentStepName);
+            sendAgentTrace(emitter, "agent_step_start", tracePayload(
+                runId,
+                currentStepId,
+                currentStepName,
+                "MODEL",
+                "running",
+                null,
+                "业务数据已收集，正在生成综合回答"
+            ));
+            String result = streamFinalSynthesis(chatRequest, input, results, emitter, runId);
+            sendAgentTrace(emitter, "agent_step_done", tracePayload(
+                runId,
+                currentStepId,
+                currentStepName,
+                "MODEL",
+                "success",
+                summarizeFinalAnswer(result),
+                "综合回答已生成"
+            ));
+            AgentTraceContext.clearStep(currentStepId);
+            currentStepId = null;
+            currentStepName = null;
             saveChatMessage(userId, chatRequest.getSessionId(), result, RoleType.ASSISTANT.getName(), chatRequest.getModel());
             sendAgentTrace(emitter, "agent_run_done", Map.of(
                 "runId", runId,
@@ -304,6 +380,18 @@ public class AgentRuntimeService {
         } catch (Exception e) {
             String errorMessage = resolveErrorMessage(e);
             log.error("Sequential Business Agent 执行失败", e);
+            if (currentStepId != null) {
+                sendAgentTrace(emitter, "agent_step_done", tracePayload(
+                    runId,
+                    currentStepId,
+                    currentStepName,
+                    currentStepType,
+                    "error",
+                    errorMessage,
+                    currentStepName + "执行失败"
+                ));
+                AgentTraceContext.clearStep(currentStepId);
+            }
             sendAgentTrace(emitter, "agent_run_done", Map.of(
                 "runId", runId,
                 "assistantCode", assistantCode,
@@ -333,6 +421,141 @@ public class AgentRuntimeService {
         input.append("最终输出必须是中文 Markdown 摘要，结构化字段必须表格化：单对象用“| 字段 | 内容 |”两列表格，多对象用业务列表表格；不要原样倾倒 JSON，不要输出连续的“字段：值”纯文本段落。");
         input.append("重点字段要标记：客户名、联系人、合同名、工单号、金额、状态、当前阶段、进度、交付日期使用 Markdown 加粗；缺料、异常、失败、逾期、风险、暂未查询到等负向信息使用 <mark>...</mark> 高亮。");
         return input.toString();
+    }
+
+    private Map<String, Object> planPayload(String runId, AgentRuntimeProfile profile) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("runId", runId);
+        payload.put("steps", profile.planSteps());
+        payload.put("message", profile.canRunSequentially()
+            ? "已识别为跨业务链查询，将按 " + businessSequence(profile.orderedBusinessDomains()) + " 顺序收集线索"
+            : "已识别用户意图，正在选择合适的业务能力");
+        payload.put("status", "planned");
+        payload.put("timestamp", System.currentTimeMillis());
+        return payload;
+    }
+
+    private String businessSequence(List<BusinessDomain> domains) {
+        List<String> names = new ArrayList<>();
+        for (BusinessDomain domain : domains) {
+            names.add(domain.displayName());
+        }
+        return String.join(" -> ", names);
+    }
+
+    private String sequentialStartMessage(BusinessDomain domain, List<BusinessAgentResult> previousResults) {
+        return switch (domain) {
+            case CRM -> "正在查询 CRM 客户/合同线索，为后续业务链路做准备";
+            case MES -> previousResults.isEmpty()
+                ? "正在交给 MES 工单 Agent 查询生产进度"
+                : "正在把前序客户/合同线索交给 MES 工单 Agent";
+            case ENGINEERING -> previousResults.isEmpty()
+                ? "正在交给工程物料 Agent 查询物料与缺料信息"
+                : "正在把前序客户/合同/工单线索交给工程物料 Agent";
+            case SRM -> previousResults.isEmpty()
+                ? "正在交给 SRM 采购 Agent 查询采购需求和订单"
+                : "正在把前序工单/物料线索交给 SRM 采购 Agent";
+            case WMS -> previousResults.isEmpty()
+                ? "正在交给 WMS 库存 Agent 查询库存、收料和发料"
+                : "正在把前序物料/采购线索交给 WMS 库存 Agent";
+        };
+    }
+
+    private String sequentialDoneMessage(BusinessDomain domain, String summary) {
+        return domain.displayName() + "已完成：" + summary;
+    }
+
+    private String sequentialHandoffSummary(List<BusinessAgentResult> previousResults) {
+        List<String> summaries = new ArrayList<>();
+        for (BusinessAgentResult result : previousResults) {
+            summaries.add(result.domain().displayName() + "：" + summarizeBusinessAgentResult(result.domain(), result.output()));
+        }
+        return String.join("；", summaries);
+    }
+
+    private String summarizeBusinessAgentResult(BusinessDomain domain, String output) {
+        return summarizeAgentOutput(domain.displayName(), output);
+    }
+
+    private String summarizeAgentOutput(String name, String output) {
+        if (StringUtils.isBlank(output)) {
+            return name + "未返回可展示的业务结果";
+        }
+        String plain = compactPlainText(output);
+        boolean hasGap = containsAny(plain, "暂未查询到", "未查询到", "缺少", "无法唯一", "需要补充", "异常", "失败", "逾期", "风险");
+        List<String> highlights = extractHighlights(output);
+
+        StringBuilder summary = new StringBuilder();
+        summary.append(name).append(hasGap ? "返回了需要补充或关注的信息" : "返回了可用业务线索");
+        summary.append("，内容约").append(plain.length()).append("字");
+        if (!highlights.isEmpty()) {
+            summary.append("，关键线索：").append(String.join("、", highlights));
+        }
+        return summary.toString();
+    }
+
+    private String summarizeFinalAnswer(String answer) {
+        if (StringUtils.isBlank(answer)) {
+            return "综合回答为空，已结束生成流程";
+        }
+        return "综合回答已完成，正文约" + compactPlainText(answer).length() + "字";
+    }
+
+    private List<String> extractHighlights(String output) {
+        List<String> highlights = new ArrayList<>();
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\*\\*([^*\\n]{2,50})\\*\\*").matcher(output);
+        while (matcher.find() && highlights.size() < 5) {
+            String value = matcher.group(1).trim();
+            if (!value.isBlank() && !highlights.contains(value)) {
+                highlights.add(value);
+            }
+        }
+        if (highlights.isEmpty()) {
+            String sentence = firstSentence(compactPlainText(output));
+            if (StringUtils.isNotBlank(sentence)) {
+                highlights.add(truncate(sentence, 90));
+            }
+        }
+        return highlights;
+    }
+
+    private String firstSentence(String text) {
+        if (StringUtils.isBlank(text)) {
+            return "";
+        }
+        int end = text.length();
+        for (String mark : List.of("。", "；", ";", "\n")) {
+            int index = text.indexOf(mark);
+            if (index > 0) {
+                end = Math.min(end, index);
+            }
+        }
+        return text.substring(0, Math.min(end, text.length())).trim();
+    }
+
+    private String compactPlainText(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replaceAll("<[^>]+>", "")
+            .replace("|", " ")
+            .replace("*", "")
+            .replace("#", "")
+            .replaceAll("\\s+", " ")
+            .trim();
+    }
+
+    private boolean containsAny(String text, String... keywords) {
+        if (text == null) {
+            return false;
+        }
+        for (String keyword : keywords) {
+            if (text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String formatSequentialResults(List<BusinessAgentResult> results) {
@@ -374,15 +597,36 @@ public class AgentRuntimeService {
     }
 
     private String streamFinalSynthesis(ChatRequest chatRequest, String originalInput, List<BusinessAgentResult> results,
-                                        SseEmitter emitter) {
+                                        SseEmitter emitter, String runId) {
         String prompt = buildFinalSynthesisPrompt(originalInput, results);
         try {
             AbstractChatService chatService = chatServiceFactory.getOriginalService(chatRequest.getChatModelVo().getProviderCode());
             StreamingChatModel streamingChatModel = chatService.buildStreamingChatModel(chatRequest.getChatModelVo(), chatRequest);
             String answer = streamModelContent(streamingChatModel, prompt, emitter);
-            return StringUtils.isBlank(answer) ? streamFallbackSequentialResults(results, emitter) : answer;
+            if (StringUtils.isBlank(answer)) {
+                sendAgentTrace(emitter, "agent_step_log", tracePayload(
+                    runId,
+                    "business-final-synthesis",
+                    "综合分析整理",
+                    "MODEL",
+                    "running",
+                    "综合模型未返回内容，已切换为业务结果拼接",
+                    "综合回答为空，正在回退为已收集数据摘要"
+                ));
+                return streamFallbackSequentialResults(results, emitter);
+            }
+            return answer;
         } catch (Exception e) {
             log.warn("综合分析整理失败，回退为顺序结果拼接: {}", e.getMessage());
+            sendAgentTrace(emitter, "agent_step_log", tracePayload(
+                runId,
+                "business-final-synthesis",
+                "综合分析整理",
+                "MODEL",
+                "running",
+                "综合模型调用失败：" + resolveErrorMessage(e),
+                "综合模型暂不可用，正在回退为已收集数据摘要"
+            ));
             return streamFallbackSequentialResults(results, emitter);
         }
     }
@@ -798,6 +1042,15 @@ public class AgentRuntimeService {
         payload.put("timestamp", System.currentTimeMillis());
         if (result != null) {
             payload.put("result", result);
+        }
+        return payload;
+    }
+
+    private Map<String, Object> tracePayload(String runId, String stepId, String name, String type, String status,
+                                             Object result, String message) {
+        Map<String, Object> payload = tracePayload(runId, stepId, name, type, status, result);
+        if (StringUtils.isNotBlank(message)) {
+            payload.put("message", message);
         }
         return payload;
     }

@@ -25,8 +25,8 @@ type MessageItem = BubbleProps & {
   thinlCollapse?: boolean;
   reasoning_content?: string;
   toolCalls?: ToolCallInfo[];
-  toolCallsCollapsed?: boolean;
   agentProgress?: string;
+  agentMode?: boolean;
   class?: string;
 };
 
@@ -85,6 +85,7 @@ onMounted(() => {
 
 // 记录进入思考中
 let isThinking = false;
+let pendingSseText = '';
 
 watch(
   () => route.params?.id,
@@ -139,14 +140,16 @@ async function startSSE(chatContent: string) {
   try {
     toolCallKeyCounter = 0;
     traceOrderCounter = 0;
+    pendingSseText = '';
     executionEvents.value = [];
     activeAgentRunId.value = '';
     hasAssistantContent.value = false;
+    const useAgentMode = shouldUseInternalAgent(chatContent);
 
     // 添加用户输入的消息
     inputValue.value = '';
     addMessage(chatContent, true);
-    addMessage('', false);
+    addMessage('', false, { agentMode: useAgentMode });
 
     // 这里有必要调用一下 BubbleList 组件的滚动到底部 手动触发 自动滚动
     bubbleListRef.value?.scrollToBottom();
@@ -156,8 +159,6 @@ async function startSSE(chatContent: string) {
 
     // 标记是否收到第一个有效数据 chunk（用于清除 loading 状态）
     let hasReceivedFirstContent = false;
-
-    const useAgentMode = shouldUseInternalAgent(lastUserMessage?.content ?? '');
 
     for await (const chunk of stream({
       assistantCode: useAgentMode ? 'internal-unified' : undefined,
@@ -184,12 +185,11 @@ async function startSSE(chatContent: string) {
       // 等待 Vue 更新 DOM，实现真正的流式渲染
       await nextTick();
 
-      if (isStreamEnd) {
-        // 收到 done 后不主动 break，继续把浏览器/TransformStream 中已排队的事件读完。
-        // 后端会随后关闭 SSE，for-await 会自然结束；主动 break 容易丢掉同批次里尚未渲染的尾部内容。
-        console.log('[SSE] 收到结束事件，等待连接自然关闭');
-      }
+      // 收到 done 后不主动 break，继续把浏览器/TransformStream 中已排队的事件读完。
+      // 后端会随后关闭 SSE，for-await 会自然结束；主动 break 容易丢掉同批次里尚未渲染的尾部内容。
     }
+
+    await flushPendingSseEvents();
   }
   catch (err) {
     endedWithError = true;
@@ -210,6 +210,7 @@ async function startSSE(chatContent: string) {
       lastMessage.typing = false;
       // 无条件重置 loading（停止打字动画）
       lastMessage.loading = false;
+      lastMessage.agentProgress = '';
       // 重置思考状态：如果还在思考中，标记为已完成
       if (lastMessage.thinkingStatus === 'thinking') {
         lastMessage.thinkingStatus = 'end';
@@ -232,12 +233,10 @@ function handleConfirmDraft(draftId: string) {
 
 // 封装数据处理逻辑
 async function handleDataChunk(chunk: AnyObject | string): Promise<boolean> {
-  console.log('[SSE] 收到 chunk:', chunk, 'type:', typeof chunk);
-
   try {
     if (typeof chunk === 'string') {
-      if (chunk === ':connected' || chunk === ':disconnected' || chunk.startsWith(':')) {
-        console.log('[SSE] 连接状态:', chunk);
+      const trimmedChunk = chunk.trim();
+      if (trimmedChunk === ':connected' || trimmedChunk === ':disconnected' || (trimmedChunk.startsWith(':') && !trimmedChunk.includes('\n'))) {
         return false;
       }
 
@@ -282,6 +281,15 @@ async function handleDataChunk(chunk: AnyObject | string): Promise<boolean> {
   return false;
 }
 
+async function flushPendingSseEvents(): Promise<boolean> {
+  let shouldEnd = false;
+  for (const event of parseSseStringEvents('', true)) {
+    shouldEnd = handleSseEvent(event.data, event.eventType) || shouldEnd;
+    await waitForSseRenderFrame(event.eventType || event.data?.event || '');
+  }
+  return shouldEnd;
+}
+
 async function waitForSseRenderFrame(eventType: string) {
   await nextTick();
   if (eventType.startsWith('agent_')) {
@@ -289,37 +297,85 @@ async function waitForSseRenderFrame(eventType: string) {
   }
 }
 
-function parseSseStringEvents(chunk: string) {
-  return chunk
-    .split(/\n{2,}/)
-    .map(block => block.trim())
-    .filter(Boolean)
-    .map((block) => {
-      let eventType = '';
-      const dataLines: string[] = [];
+function parseSseStringEvents(chunk: string, flush = false) {
+  pendingSseText += chunk.replace(/\r\n/g, '\n');
+  const events: Array<{ eventType: string; data: AnyObject }> = [];
 
-      for (const line of block.split('\n')) {
-        if (line.startsWith('event:')) {
-          eventType = line.substring(6).trim();
-        }
-        else if (line.startsWith('data:')) {
-          dataLines.push(line.substring(5).trim());
-        }
-      }
+  while (pendingSseText) {
+    const separator = pendingSseText.match(/\n{2,}/);
+    if (!separator || separator.index === undefined) {
+      break;
+    }
 
-      const dataText = dataLines.join('\n');
-      if (!dataText) {
-        return { eventType, data: { event: eventType } };
-      }
+    const block = pendingSseText.slice(0, separator.index);
+    pendingSseText = pendingSseText.slice(separator.index + separator[0].length);
+    const parsedEvent = parseSseBlock(block, false);
+    if (parsedEvent) {
+      events.push(parsedEvent);
+    }
+  }
 
-      try {
-        return { eventType, data: JSON.parse(dataText) as AnyObject };
-      }
-      catch {
-        console.warn('[SSE] JSON 解析失败:', dataText);
-        return { eventType, data: { event: eventType, content: dataText } };
-      }
-    });
+  if (pendingSseText.trim()) {
+    const parsedEvent = parseSseBlock(pendingSseText, !flush);
+    if (parsedEvent) {
+      events.push(parsedEvent);
+      pendingSseText = '';
+    }
+    else if (flush) {
+      pendingSseText = '';
+    }
+  }
+
+  return events;
+}
+
+function parseSseBlock(block: string, waitForCompleteJson: boolean) {
+  const normalizedBlock = block.trim();
+  if (!normalizedBlock) {
+    return null;
+  }
+
+  let eventType = '';
+  let hasSseField = false;
+  const dataLines: string[] = [];
+
+  for (const line of normalizedBlock.split('\n')) {
+    if (line.startsWith('event:')) {
+      eventType = line.substring(6).trim();
+      hasSseField = true;
+    }
+    else if (line.startsWith('data:')) {
+      dataLines.push(line.substring(5).trim());
+      hasSseField = true;
+    }
+    else if (line.startsWith(':')) {
+      hasSseField = true;
+    }
+  }
+
+  const dataText = dataLines.join('\n');
+  if (!dataText) {
+    if (hasSseField) {
+      return { eventType, data: { event: eventType } };
+    }
+    return { eventType: 'content', data: { event: 'content', content: normalizedBlock } };
+  }
+
+  try {
+    return { eventType, data: JSON.parse(dataText) as AnyObject };
+  }
+  catch {
+    if (waitForCompleteJson && isLikelyJsonStart(dataText)) {
+      return null;
+    }
+    console.warn('[SSE] JSON 解析失败:', dataText);
+    return { eventType: eventType || 'content', data: { event: eventType || 'content', content: dataText } };
+  }
+}
+
+function isLikelyJsonStart(value: string) {
+  const text = value.trim();
+  return text.startsWith('{') || text.startsWith('[') || text.startsWith('"');
 }
 
 function handleSseEvent(dataObj: AnyObject, rawEventType = ''): boolean {
@@ -350,7 +406,6 @@ function handleSseEvent(dataObj: AnyObject, rawEventType = ''): boolean {
   }
 
   if (eventType === 'done' || dataObj.done === true) {
-    console.log('[SSE] 流结束');
     return true;
   }
 
@@ -361,10 +416,13 @@ function handleAgentTraceEvent(eventType: string, dataObj: AnyObject) {
   const payload = (dataObj.payload || dataObj.content || dataObj) as AnyObject;
 
   if (eventType === 'agent_run_start' && payload.runId) {
+    const shouldResetTrace = Boolean(activeAgentRunId.value && payload.runId !== activeAgentRunId.value);
     activeAgentRunId.value = payload.runId;
-    executionEvents.value = [];
-    traceOrderCounter = 0;
-    setAgentProgress(payload.title ? `正在启动：${payload.title}` : '正在启动内部统一入口 Agent');
+    if (shouldResetTrace) {
+      executionEvents.value = [];
+      traceOrderCounter = 0;
+    }
+    setAgentProgress('正在分析问题并准备业务查询链路');
     syncCurrentAssistantToolCalls();
     bubbleItems.value = [...bubbleItems.value];
     return;
@@ -392,7 +450,7 @@ function handleAgentTraceEvent(eventType: string, dataObj: AnyObject) {
     status,
     result: formatTraceResult(payload, eventType),
     timestamp: payload.timestamp || Date.now(),
-    type: payload.type || 'AGENT',
+    type: eventType === 'agent_step_log' ? 'LOG' : payload.type || 'AGENT',
     runId: payload.runId,
     stepId,
     input: extractTraceInput(payload),
@@ -423,6 +481,9 @@ function resolveTraceStepId(eventType: string, payload: AnyObject) {
   if (eventType === 'agent_plan' && payload.runId) {
     return `plan:${payload.runId}`;
   }
+  if (eventType === 'agent_step_log') {
+    return `log:${payload.stepId || payload.name || payload.runId}:${payload.timestamp || Date.now()}:${traceOrderCounter + 1}`;
+  }
   if ((eventType.startsWith('agent_tool') || payload.type === 'TOOL') && (payload.stepId || payload.id || payload.name)) {
     return payload.stepId || `tool:${payload.id || payload.name}`;
   }
@@ -432,6 +493,9 @@ function resolveTraceStepId(eventType: string, payload: AnyObject) {
 function resolveTraceName(eventType: string, payload: AnyObject, existingEvent: ToolCallInfo | null) {
   if (eventType === 'agent_plan') {
     return '执行计划';
+  }
+  if (eventType === 'agent_step_log') {
+    return payload.message || payload.name || existingEvent?.name || '执行日志';
   }
   if (eventType.startsWith('agent_tool') || payload.type === 'TOOL') {
     return payload.name || payload.toolName || existingEvent?.name || '工具调用';
@@ -455,7 +519,6 @@ function setAgentProgress(text: string) {
   if (!lastMessage || hasAssistantContent.value) {
     return;
   }
-  lastMessage.loading = Boolean(text);
   lastMessage.agentProgress = text;
   bubbleItems.value = [...bubbleItems.value];
 }
@@ -476,6 +539,9 @@ function finalizePendingTraceEvents(status: ToolCallInfo['status']) {
 }
 
 function normalizeTraceStatus(status: unknown, eventType: string): ToolCallInfo['status'] {
+  if (eventType === 'agent_step_log' && status !== 'error' && status !== 'failed') {
+    return 'success';
+  }
   if (eventType.endsWith('_start') || status === 'running') {
     return 'pending';
   }
@@ -489,6 +555,9 @@ function formatTraceResult(payload: AnyObject, eventType: string) {
   const result = payload.result ?? payload.output ?? payload.response ?? payload.rawResult ?? payload.error;
   if (result !== undefined && result !== null) {
     return typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+  }
+  if (payload.message) {
+    return String(payload.message);
   }
   if (eventType.endsWith('_start')) {
     return null;
@@ -504,16 +573,12 @@ function appendReasoningContent(reasoningContent: string) {
   const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
   if (lastMessage) {
     lastMessage.thinkingStatus = 'thinking';
-    lastMessage.loading = true;
-    lastMessage.thinlCollapse = true;
     lastMessage.reasoning_content += reasoningContent;
     bubbleItems.value = [...bubbleItems.value];
   }
 }
 
 function handleMcpEvent(dataObj: AnyObject) {
-  console.log('[SSE] MCP 事件:', dataObj);
-
   try {
     const content = typeof dataObj.content === 'string'
       ? JSON.parse(dataObj.content)
@@ -561,7 +626,6 @@ function handleMcpEvent(dataObj: AnyObject) {
 
     syncCurrentAssistantToolCalls();
     bubbleItems.value = [...bubbleItems.value];
-    console.log('[SSE] 执行上下文列表:', executionEvents.value);
   }
   catch (err) {
     console.error('[SSE] MCP 事件解析失败:', err);
@@ -571,7 +635,7 @@ function handleMcpEvent(dataObj: AnyObject) {
 function getCurrentAssistantMessage() {
   for (let i = bubbleItems.value.length - 1; i >= 0; i--) {
     const item = bubbleItems.value[i];
-    if (item.role === 'system') {
+    if (isAssistantRole(item)) {
       return item;
     }
   }
@@ -591,51 +655,46 @@ function syncCurrentAssistantToolCalls() {
 }
 
 function isAssistantStreaming(item: MessageItem) {
-  if (item.role !== 'system') {
+  if (!isAssistantRole(item)) {
     return false;
   }
   const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
   return Boolean(isLoading.value && lastMessage?.key === item.key);
 }
 
-function traceStatusText(status: ToolCallInfo['status']) {
-  if (status === 'pending') {
-    return '执行中';
-  }
-  if (status === 'error') {
-    return '失败';
-  }
-  return '完成';
+function isAssistantRole(item: MessageItem) {
+  return item.role === 'system' || item.role === 'ai';
 }
 
-function successfulToolCallCount(toolCalls?: ToolCallInfo[]) {
-  return toolCalls?.filter(trace => trace.status === 'success').length ?? 0;
-}
-
-function visibleToolCalls(toolCalls?: ToolCallInfo[]) {
-  return toolCalls?.slice(0, 4) ?? [];
+function completedToolCallCount(toolCalls?: ToolCallInfo[]) {
+  return toolCalls?.filter(trace => trace.type !== 'LOG' && trace.status !== 'pending').length ?? 0;
 }
 
 function shouldShowReasoningPanel(item: MessageItem) {
-  return Boolean(item.reasoning_content || item.toolCalls?.length || item.agentProgress || isAssistantStreaming(item));
+  return Boolean(item.agentMode || item.reasoning_content || item.toolCalls?.length || item.agentProgress);
 }
 
-function executionProcessRows(item: MessageItem) {
-  const rows: string[] = [];
+function reasoningStateText(item: MessageItem) {
+  if (isAssistantStreaming(item)) {
+    return '进行中';
+  }
+  if (item.toolCalls?.some(trace => trace.status === 'error')) {
+    return '有失败步骤';
+  }
+  return '已完成';
+}
+
+function reasoningLeadText(item: MessageItem) {
   if (item.agentProgress) {
-    rows.push(item.agentProgress);
+    return item.agentProgress;
   }
-  if (item.toolCalls?.length) {
-    rows.push(
-      ...item.toolCalls
-        .slice(-6)
-        .map(trace => `${traceStatusText(trace.status)}：${trace.name}`),
-    );
+  if (item.agentMode && isAssistantStreaming(item)) {
+    return '正在连接业务协作链路，准备分析问题并选择工具。';
   }
-  if (!rows.length && isAssistantStreaming(item)) {
-    rows.push('正在连接内部统一入口 Agent，准备分析问题并选择业务工具。');
+  if (item.reasoning_content && isAssistantStreaming(item)) {
+    return '正在准备响应，稍后会展示分析和执行步骤。';
   }
-  return rows;
+  return '';
 }
 
 function shouldUseInternalAgent(content: string) {
@@ -698,8 +757,6 @@ function handleContentChunk(content: string) {
     currentText = currentText.substring(thinkIdx + 7);
     isThinking = true;
     lastMessage.thinkingStatus = 'thinking';
-    lastMessage.loading = true;
-    lastMessage.thinlCollapse = true;
   }
 
   if (isThinking && currentText.includes('</think')) {
@@ -711,7 +768,6 @@ function handleContentChunk(content: string) {
     currentText = currentText.substring(thinkEndIdx + 8);
     isThinking = false;
     lastMessage.thinkingStatus = 'end';
-    lastMessage.loading = false;
   }
 
   if (currentText) {
@@ -730,7 +786,10 @@ function handleContentChunk(content: string) {
 async function cancelSSE() {
   cancel();
   if (bubbleItems.value.length) {
-    bubbleItems.value[bubbleItems.value.length - 1].typing = false;
+    const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
+    lastMessage.typing = false;
+    lastMessage.loading = false;
+    lastMessage.agentProgress = '';
   }
 }
 
@@ -749,7 +808,7 @@ function copyToClipboard(text: string, key: number) {
     });
 }
 
-function addMessage(message: string, isUser: boolean) {
+function addMessage(message: string, isUser: boolean, options: { agentMode?: boolean } = {}) {
   const i = bubbleItems.value.length;
   const obj: MessageItem = {
     key: i,
@@ -760,14 +819,17 @@ function addMessage(message: string, isUser: boolean) {
     role: isUser ? 'user' : 'system',
     placement: isUser ? 'end' : 'start',
     isMarkdown: !isUser,
-    loading: !isUser,
+    loading: false,
     content: message || '',
     reasoning_content: '',
     toolCalls: [],
-    toolCallsCollapsed: false,
     thinkingStatus: 'start',
     thinlCollapse: false,
     noStyle: !isUser,
+    agentMode: options.agentMode,
+    agentProgress: !isUser && options.agentMode
+      ? '正在连接业务协作链路，准备分析问题并选择工具。'
+      : '',
   };
   bubbleItems.value.push(obj);
 }
@@ -809,96 +871,44 @@ function handleCreateNewChat() {
     <div class="chat-warp">
       <BubbleList ref="bubbleListRef" :list="bubbleItems" max-height="calc(100vh - 216px)">
         <template #content="{ item }">
-          <div v-if="item.role === 'system'" class="assistant-answer-card">
-            <div class="assistant-answer-head">
-              <div class="assistant-title-wrap">
-                <span class="assistant-orb" :class="{ active: isAssistantStreaming(item) }" />
-                <div>
-                  <div class="assistant-title">
-                    内部统一入口 Agent
-                  </div>
-                  <div class="assistant-subtitle">
-                    {{ isAssistantStreaming(item) ? '正在流式生成回答' : '回答已同步' }}
-                  </div>
-                </div>
-              </div>
-              <span class="stream-status" :class="{ live: isAssistantStreaming(item) }">
-                {{ isAssistantStreaming(item) ? 'Live' : 'Done' }}
-              </span>
-            </div>
-
+          <div v-if="isAssistantRole(item)" class="assistant-answer-card">
             <div v-if="shouldShowReasoningPanel(item)" class="reasoning-panel" :class="{ expanded: !item.thinlCollapse }">
               <button type="button" class="reasoning-toggle" @click="item.thinlCollapse = !item.thinlCollapse">
-                <span class="reasoning-dot" :class="{ active: item.thinkingStatus === 'thinking' }" />
+                <span class="reasoning-dot" :class="{ active: item.thinkingStatus === 'thinking' || isAssistantStreaming(item) }" />
                 <span>思考 / 执行过程</span>
-                <span class="reasoning-state">{{ isAssistantStreaming(item) ? '进行中' : '已完成' }}</span>
+                <span v-if="item.toolCalls?.length" class="reasoning-count">
+                  {{ completedToolCallCount(item.toolCalls) }}/{{ item.toolCalls.length }}
+                </span>
+                <span class="reasoning-state">{{ reasoningStateText(item) }}</span>
                 <el-icon class="reasoning-arrow" :class="{ open: !item.thinlCollapse }">
                   <ArrowDown />
                 </el-icon>
               </button>
               <div v-show="!item.thinlCollapse" class="reasoning-content">
-                <div v-if="executionProcessRows(item).length" class="reasoning-steps">
-                  <div v-for="row in executionProcessRows(item)" :key="row" class="reasoning-step">
-                    {{ row }}
-                  </div>
+                <div v-if="reasoningLeadText(item)" class="reasoning-lead">
+                  <span class="agent-progress-dot" />
+                  <span>{{ reasoningLeadText(item) }}</span>
                 </div>
-                <div v-if="item.reasoning_content" class="reasoning-text">
-                  {{ item.reasoning_content }}
-                </div>
-              </div>
-            </div>
 
-            <div v-if="item.toolCalls?.length" class="agent-trace-panel" :class="{ expanded: !item.toolCallsCollapsed }">
-              <button type="button" class="agent-trace-toggle" @click="item.toolCallsCollapsed = !item.toolCallsCollapsed">
-                <span class="agent-trace-title">
-                  <span class="agent-trace-dot" :class="{ active: isAssistantStreaming(item) }" />
-                  Agent 调用过程
-                </span>
-                <span class="agent-trace-count">
-                  {{ successfulToolCallCount(item.toolCalls) }}/{{ item.toolCalls.length }} 完成
-                </span>
-                <el-icon class="agent-trace-arrow" :class="{ open: !item.toolCallsCollapsed }">
-                  <ArrowDown />
-                </el-icon>
-              </button>
-
-              <div v-show="item.toolCallsCollapsed" class="agent-trace-summary">
-                <div
-                  v-for="trace in visibleToolCalls(item.toolCalls)"
-                  :key="trace.key || trace.stepId"
-                  class="inline-trace-item"
-                  :class="trace.status"
-                >
-                  <span class="trace-pulse" />
-                  <span class="trace-name">{{ trace.name }}</span>
-                  <span class="trace-status">{{ traceStatusText(trace.status) }}</span>
-                </div>
-              </div>
-
-              <el-collapse-transition>
-                <div v-show="!item.toolCallsCollapsed" class="agent-trace-list">
-                  <ToolCallCard
+                <div v-if="item.toolCalls?.length" class="reasoning-timeline">
+                  <div
                     v-for="trace in item.toolCalls"
                     :key="trace.key || trace.stepId"
-                    :tool-info="trace"
-                    @confirm-draft="handleConfirmDraft"
-                  />
+                    class="reasoning-timeline-row"
+                    :class="trace.status"
+                  >
+                    <span class="timeline-marker" />
+                    <div class="timeline-card">
+                      <ToolCallCard
+                        :tool-info="trace"
+                        @confirm-draft="handleConfirmDraft"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </el-collapse-transition>
-            </div>
 
-            <div v-if="item.agentProgress && !item.content" class="agent-progress-card">
-              <span class="agent-progress-dot" />
-              <span>{{ item.agentProgress }}</span>
-            </div>
-            <div v-else-if="!item.content && isAssistantStreaming(item)" class="answer-waiting-card">
-              <span class="agent-progress-dot" />
-              <div>
-                <div class="waiting-title">
-                  正在协作查询
-                </div>
-                <div class="waiting-desc">
-                  已开启流式响应，查询到结果后会立即逐段展示。
+                <div v-if="item.reasoning_content" class="reasoning-text">
+                  {{ item.reasoning_content }}
                 </div>
               </div>
             </div>
@@ -1025,20 +1035,6 @@ function handleCreateNewChat() {
   gap: 4px;
 }
 
-.agent-progress-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 100%;
-  margin: 12px 14px 0;
-  padding: 10px 14px;
-  color: #42526b;
-  background: #f8fafc;
-  border: 1px solid #e4ebf5;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
 .agent-progress-dot {
   width: 8px;
   height: 8px;
@@ -1047,31 +1043,6 @@ function handleCreateNewChat() {
   box-shadow: 0 0 0 0 rgb(79 124 255 / 45%);
   animation: agent-progress-pulse 1.3s ease-in-out infinite;
   flex-shrink: 0;
-}
-
-.answer-waiting-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  margin: 12px 14px 0;
-  padding: 12px 14px;
-  color: #334155;
-  background: #ffffff;
-  border: 1px solid #e4ebf5;
-  border-radius: 8px;
-}
-
-.waiting-title {
-  font-size: 14px;
-  font-weight: 750;
-  line-height: 1.4;
-}
-
-.waiting-desc {
-  margin-top: 3px;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.5;
 }
 
 @keyframes agent-progress-pulse {
@@ -1264,68 +1235,6 @@ function handleCreateNewChat() {
   border-radius: 10px;
   box-shadow: 0 12px 34px rgb(15 23 42 / 8%);
 
-  .assistant-answer-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 13px 16px;
-    border-bottom: 1px solid #e8eef6;
-    background:
-      linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
-  }
-
-  .assistant-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-  }
-
-  .assistant-orb {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: #94a3b8;
-    box-shadow: 0 0 0 5px rgb(148 163 184 / 14%);
-    flex-shrink: 0;
-
-    &.active {
-      background: #1677ff;
-      box-shadow: 0 0 0 0 rgb(22 119 255 / 36%);
-      animation: agent-progress-pulse 1.25s ease-in-out infinite;
-    }
-  }
-
-  .assistant-title {
-    font-size: 15px;
-    line-height: 1.2;
-    font-weight: 750;
-    color: #172033;
-  }
-
-  .assistant-subtitle {
-    margin-top: 3px;
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .stream-status {
-    flex-shrink: 0;
-    padding: 4px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0;
-    color: #64748b;
-    background: #eef2f7;
-
-    &.live {
-      color: #075985;
-      background: #e0f2fe;
-    }
-  }
-
   .reasoning-panel {
     margin: 12px 14px 0;
     border: 1px solid #dbe4ef;
@@ -1373,6 +1282,20 @@ function handleCreateNewChat() {
     font-weight: 650;
   }
 
+  .reasoning-count {
+    margin-left: auto;
+    padding: 2px 7px;
+    color: #475569;
+    background: #eef2f7;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .reasoning-count + .reasoning-state {
+    margin-left: 0;
+  }
+
   .reasoning-arrow {
     color: #64748b;
     transition: transform 0.2s ease;
@@ -1383,9 +1306,9 @@ function handleCreateNewChat() {
   }
 
   .reasoning-content {
-    max-height: 220px;
+    max-height: 420px;
     overflow: auto;
-    padding: 0 12px 12px 26px;
+    padding: 0 12px 12px;
     white-space: pre-wrap;
     word-break: break-word;
     color: #475569;
@@ -1393,154 +1316,128 @@ function handleCreateNewChat() {
     line-height: 1.72;
   }
 
-  .reasoning-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-
-  .reasoning-step {
-    position: relative;
-    padding-left: 14px;
-    color: #334155;
-    font-size: 12px;
-    line-height: 1.55;
-
-    &::before {
-      position: absolute;
-      top: 8px;
-      left: 0;
-      width: 6px;
-      height: 6px;
-      content: '';
-      background: #94a3b8;
-      border-radius: 50%;
-    }
-  }
-
-  .reasoning-text {
-    padding-top: 8px;
-    border-top: 1px dashed #dbe4ef;
-  }
-
-  .agent-trace-panel {
-    margin: 12px 14px 0;
-    border: 1px solid #dbeafe;
-    border-radius: 8px;
-    background: #f8fbff;
-    overflow: hidden;
-
-    &.expanded {
-      background: #ffffff;
-    }
-  }
-
-  .agent-trace-toggle {
-    width: 100%;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: #1e3a8a;
-    font-size: 12px;
-    font-weight: 800;
-    text-align: left;
-  }
-
-  .agent-trace-title {
+  .reasoning-lead {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
+    max-width: 100%;
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    color: #42526b;
+    background: #f8fafc;
+    border: 1px solid #e4ebf5;
+    border-radius: 7px;
+    font-size: 12px;
+    line-height: 1.5;
   }
 
-  .agent-trace-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #22c55e;
-
-    &.active {
-      background: #f59e0b;
-      animation: agent-progress-pulse 1.25s ease-in-out infinite;
-    }
-  }
-
-  .agent-trace-count {
-    margin-left: auto;
-    color: #64748b;
-    font-weight: 700;
-  }
-
-  .agent-trace-arrow {
-    color: #64748b;
-    transition: transform 0.2s ease;
-
-    &.open {
-      transform: rotate(180deg);
-    }
-  }
-
-  .agent-trace-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 6px 10px;
-    padding: 0 12px 12px;
-  }
-
-  .agent-trace-list {
+  .reasoning-timeline {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 360px;
-    overflow-y: auto;
-    padding: 0 12px 12px;
+    margin: 0 0 10px;
+
+    &::before {
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 7px;
+      width: 1px;
+      content: '';
+      background: #dbe4ef;
+    }
   }
 
-  .inline-trace-item {
+  .reasoning-timeline-row {
+    position: relative;
     display: grid;
-    grid-template-columns: 10px minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: 16px minmax(0, 1fr);
     gap: 8px;
-    min-height: 26px;
-    color: #475569;
-    font-size: 12px;
+    align-items: flex-start;
 
-    &.pending .trace-pulse {
+    &.pending .timeline-marker {
       background: #f59e0b;
+      box-shadow: 0 0 0 4px rgb(245 158 11 / 14%);
       animation: agent-progress-pulse 1.25s ease-in-out infinite;
     }
 
-    &.success .trace-pulse {
+    &.success .timeline-marker {
       background: #22c55e;
     }
 
-    &.error .trace-pulse {
+    &.error .timeline-marker {
       background: #ef4444;
     }
   }
 
-  .trace-pulse {
+  .timeline-marker {
+    position: relative;
+    z-index: 1;
     width: 7px;
     height: 7px;
+    margin: 14px 0 0 4px;
     border-radius: 50%;
     background: #94a3b8;
+    box-shadow: 0 0 0 3px #ffffff;
   }
 
-  .trace-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .timeline-card {
+    min-width: 0;
   }
 
-  .trace-status {
-    color: #64748b;
-    font-weight: 700;
+  .reasoning-text {
+    padding-top: 10px;
+    border-top: 1px dashed #dbe4ef;
+    color: #475569;
+  }
+
+  :deep(.tool-call-card) {
+    border-color: #e2e8f0;
+  }
+
+  :deep(.tool-call-card .card-header) {
+    min-height: 46px;
+  }
+
+  :deep(.tool-call-card .tool-icon) {
+    width: 22px;
+    height: 22px;
+    background: #eef4ff;
+    color: #2563eb;
+    box-shadow: none;
+  }
+
+  :deep(.tool-call-card .status-tag) {
+    height: 20px;
+  }
+
+  :deep(.tool-call-card .card-content) {
+    padding-left: 41px;
+  }
+
+  @media (max-width: 640px) {
+    .reasoning-toggle {
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .reasoning-count {
+      margin-left: 0;
+    }
+
+    .reasoning-state {
+      margin-left: auto;
+    }
+
+    .reasoning-content {
+      padding: 0 10px 10px;
+    }
+
+    .reasoning-timeline-row {
+      grid-template-columns: 12px minmax(0, 1fr);
+      gap: 6px;
+    }
   }
 
   :deep(.elx-xmarkdown-container) {
@@ -1632,50 +1529,60 @@ function handleCreateNewChat() {
   :deep(.markdown-body table) {
     display: table;
     width: 100%;
-    min-width: 100%;
+    min-width: max(100%, 700px);
     max-width: none;
-    margin: 10px 0 12px;
+    margin: 9px 0 12px;
     border-collapse: separate;
     border-spacing: 0;
     overflow: hidden;
-    border: 1px solid #d6e0ec;
-    border-radius: 7px;
+    border: 1px solid #edf1f6;
+    border-radius: 8px;
     font-size: 12px;
-    table-layout: fixed;
+    table-layout: auto;
+    box-shadow: 0 8px 18px rgb(15 23 42 / 4%);
   }
 
   :deep(.markdown-body thead th) {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #eef4fb;
-    color: #223047;
-    font-weight: 750;
+    background: #f7faff;
+    color: #334155;
+    font-weight: 800;
   }
 
   :deep(.markdown-body th),
   :deep(.markdown-body td) {
-    min-width: 68px;
-    max-width: 190px;
-    padding: 7px 9px;
-    border-right: 1px solid #d6e0ec;
-    border-bottom: 1px solid #d6e0ec;
-    color: #172033;
+    padding: 6px 10px;
+    border: 0;
+    border-bottom: 1px solid #eef2f7;
+    color: #1f2937;
     vertical-align: top;
     white-space: normal;
-    word-break: break-word;
+    word-break: normal;
+    overflow-wrap: anywhere;
     line-height: 1.45;
   }
 
   :deep(.markdown-body td:first-child),
   :deep(.markdown-body th:first-child) {
+    width: 132px;
+    background: #fbfdff;
     color: #334155;
-    font-weight: 750;
+    font-weight: 760;
+    white-space: nowrap;
   }
 
-  :deep(.markdown-body th:last-child),
-  :deep(.markdown-body td:last-child) {
-    border-right: 0;
+  :deep(.markdown-body th + th),
+  :deep(.markdown-body td + td) {
+    border-left: 1px solid rgb(226 232 240 / 55%);
+  }
+
+  :deep(.markdown-body thead th:not(:last-child)),
+  :deep(.markdown-body tbody td:not(:last-child)) {
+    white-space: nowrap;
+  }
+
+  :deep(.markdown-body td:last-child),
+  :deep(.markdown-body th:last-child) {
+    white-space: normal;
   }
 
   :deep(.markdown-body tbody tr:last-child td) {
@@ -1683,16 +1590,25 @@ function handleCreateNewChat() {
   }
 
   :deep(.markdown-body tbody tr:nth-child(even) td) {
-    background: #f9fbfe;
+    background: #fcfdff;
+  }
+
+  :deep(.markdown-body tbody tr:nth-child(even) td:first-child) {
+    background: #f8fbff;
   }
 
   :deep(.markdown-body tbody tr:hover td) {
+    background: #f7fbff;
+  }
+
+  :deep(.markdown-body tbody tr:hover td:first-child) {
     background: #f2f7ff;
   }
 
   :deep(.markdown-body table strong) {
-    color: #b42318;
+    color: #a7372f;
     font-weight: 850;
+    white-space: nowrap;
   }
 
   :deep(.markdown-body code:not(pre code)) {

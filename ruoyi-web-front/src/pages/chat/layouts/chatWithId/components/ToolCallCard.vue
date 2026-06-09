@@ -66,6 +66,19 @@ const formattedInput = computed(() => {
   return formatPanelValue(props.toolInfo.input);
 });
 
+const resultSummary = computed(() => {
+  if (props.toolInfo.status === 'pending' && !props.toolInfo.result) {
+    return '等待返回结果';
+  }
+
+  const summary = summarizeValue(props.toolInfo.result);
+  if (summary) {
+    return summary;
+  }
+
+  return props.toolInfo.status === 'success' ? '执行完成，未返回详细结果' : '暂无返回结果';
+});
+
 const typeText = computed(() => {
   switch (props.toolInfo.type) {
     case 'AGENT':
@@ -76,6 +89,8 @@ const typeText = computed(() => {
       return '护栏';
     case 'MODEL':
       return '模型';
+    case 'LOG':
+      return '日志';
     default:
       return props.toolInfo.type || '步骤';
   }
@@ -100,6 +115,123 @@ function formatPanelValue(value: unknown) {
   catch {
     return String(value);
   }
+}
+
+function summarizeValue(value: unknown): string {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    try {
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        return summarizeParsedValue(JSON.parse(trimmed));
+      }
+    }
+    catch {
+      return compactSummary(trimmed);
+    }
+
+    return compactSummary(trimmed);
+  }
+
+  return summarizeParsedValue(value);
+}
+
+function summarizeParsedValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    if (!value.length) {
+      return '返回空列表';
+    }
+    const firstItem = value[0];
+    const firstItemSummary = firstItem && typeof firstItem === 'object'
+      ? summarizeRecord(firstItem as Record<string, unknown>)
+      : stringifySummaryPart(firstItem);
+    return compactSummary(firstItemSummary ? `${value.length} 条记录，首条：${firstItemSummary}` : `${value.length} 条记录`);
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const data = record.data ?? record.result ?? record.output;
+    if (Array.isArray(data)) {
+      return data.length ? `${data.length} 条记录` : '返回空列表';
+    }
+    if (data && typeof data === 'object') {
+      const dataRecord = data as Record<string, unknown>;
+      const total = dataRecord.total ?? dataRecord.count;
+      const preferredList = dataRecord.records ?? dataRecord.list ?? dataRecord.items ?? dataRecord.rows;
+      const fallbackListEntry = Object.entries(dataRecord).find(([, item]) => Array.isArray(item));
+      const list = preferredList ?? fallbackListEntry?.[1];
+      if (Array.isArray(list)) {
+        const listName = preferredList ? '' : `${fallbackListEntry?.[0] || '列表'}：`;
+        return compactSummary(`${listName}${list.length} 条记录${total !== undefined ? `，总计 ${String(total)}` : ''}`);
+      }
+      const nestedSummary = summarizeRecord(dataRecord);
+      if (nestedSummary) {
+        return compactSummary(nestedSummary);
+      }
+    }
+
+    const priorityKeys = ['summary', 'message', 'msg', 'content', 'remark', 'error', 'status'];
+    for (const key of priorityKeys) {
+      const summary = stringifySummaryPart(record[key]);
+      if (summary && !isWeakSummary(summary)) {
+        return compactSummary(summary);
+      }
+    }
+
+    const recordSummary = summarizeRecord(record);
+    if (recordSummary) {
+      return compactSummary(recordSummary);
+    }
+  }
+
+  return compactSummary(String(value));
+}
+
+function isWeakSummary(value: string): boolean {
+  return ['success', 'ok', 'true', '成功'].includes(value.trim().toLowerCase());
+}
+
+function summarizeRecord(record: Record<string, unknown>): string {
+  return Object.entries(record)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .slice(0, 3)
+    .map(([key, value]): string => {
+      const part: string = stringifySummaryPart(value);
+      return part ? `${key}: ${part}` : '';
+    })
+    .filter(Boolean)
+    .join('；');
+}
+
+function stringifySummaryPart(value: unknown): string {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return `${value.length} 条`;
+  }
+  if (typeof value === 'object') {
+    return summarizeRecord(value as Record<string, unknown>);
+  }
+  return String(value);
+}
+
+function compactSummary(value: string): string {
+  const compacted = value.replace(/\s+/g, ' ').trim();
+  if (compacted.length <= 120) {
+    return compacted;
+  }
+  return `${compacted.slice(0, 117)}...`;
 }
 
 const parsedResult = computed<Record<string, any> | null>(() => {
@@ -181,27 +313,34 @@ function handleConfirmDraft(event: MouseEvent) {
             <Tools />
           </el-icon>
         </div>
-        <!-- 工具名称 -->
-        <span class="tool-name">{{ toolInfo.name || '工具调用' }}</span>
-        <span class="tool-type">{{ typeText }}</span>
-        <!-- 状态标签 -->
-        <el-tag
-          :style="{
-            color: statusConfig.color,
-            backgroundColor: statusConfig.bgColor,
-            borderColor: statusConfig.color,
-          }"
-          size="small"
-          class="status-tag"
-        >
-          <el-icon v-if="toolInfo.status === 'pending'" class="is-loading" :size="12">
-            <Loading />
-          </el-icon>
-          <el-icon v-else :size="12">
-            <component :is="statusConfig.icon" />
-          </el-icon>
-          <span class="status-text">{{ statusConfig.text }}</span>
-        </el-tag>
+        <div class="tool-main">
+          <div class="tool-title-row">
+            <!-- 工具名称 -->
+            <span class="tool-name">{{ toolInfo.name || '工具调用' }}</span>
+            <span class="tool-type">{{ typeText }}</span>
+            <!-- 状态标签 -->
+            <el-tag
+              :style="{
+                color: statusConfig.color,
+                backgroundColor: statusConfig.bgColor,
+                borderColor: statusConfig.color,
+              }"
+              size="small"
+              class="status-tag"
+            >
+              <el-icon v-if="toolInfo.status === 'pending'" class="is-loading" :size="12">
+                <Loading />
+              </el-icon>
+              <el-icon v-else :size="12">
+                <component :is="statusConfig.icon" />
+              </el-icon>
+              <span class="status-text">{{ statusConfig.text }}</span>
+            </el-tag>
+          </div>
+          <div class="result-summary">
+            {{ resultSummary }}
+          </div>
+        </div>
       </div>
       <div class="header-right">
         <!-- 调用时间 -->
@@ -348,6 +487,31 @@ function handleConfirmDraft(event: MouseEvent) {
         .status-text {
           line-height: 1;
         }
+      }
+
+      .tool-main {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .tool-title-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .result-summary {
+        max-width: 100%;
+        overflow: hidden;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
 
