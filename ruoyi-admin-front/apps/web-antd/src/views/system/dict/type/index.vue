@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
 
-import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { VxeGridListeners, VxeGridProps } from '#/adapter/vxe-table';
 import type { DictType } from '#/api/system/dict/dict-type-model';
+
+type GridEvents = Partial<VxeGridListeners>;
 
 import { ref } from 'vue';
 
@@ -74,7 +76,7 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
   formOptions,
   gridOptions,
   gridEvents: {
-    cellClick: (e) => {
+    cellClick: (e: Parameters<NonNullable<GridEvents['cellClick']>>[0]) => {
       const { row } = e;
       if (lastDictType.value === row.dictType) {
         return;

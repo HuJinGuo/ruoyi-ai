@@ -1,5 +1,6 @@
 package org.ruoyi.system.domain.engineering;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -20,7 +21,16 @@ public class EngineeringMaterial extends TenantEntity {
 
     private Long workOrderId;
 
+    @TableField(exist = false)
+    private String workOrderCode;
+
+    @TableField(exist = false)
+    private String projectName;
+
     private Long contractId;
+
+    @TableField(exist = false)
+    private String contractName;
 
     private Long partId;
 

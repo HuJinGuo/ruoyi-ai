@@ -1,4 +1,4 @@
-import type { VxeGridPropTypes } from '@vben/plugins/vxe-table';
+import type { VbenVxeGridApi, VxeGridPropTypes } from '@vben/plugins/vxe-table';
 
 import { h } from 'vue';
 
@@ -111,9 +111,7 @@ export type * from '@vben/plugins/vxe-table';
  * @param tableApi api
  * @returns boolean
  */
-export function vxeCheckboxChecked(
-  tableApi: ReturnType<typeof useVbenVxeGrid>[1],
-) {
+export function vxeCheckboxChecked(tableApi: VbenVxeGridApi) {
   return tableApi?.grid?.getCheckboxRecords?.()?.length > 0;
 }
 

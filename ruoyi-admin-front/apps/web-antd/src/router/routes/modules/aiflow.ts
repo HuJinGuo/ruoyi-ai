@@ -4,6 +4,7 @@ const routes: RouteRecordRaw[] = [
   {
     meta: {
       hideInMenu: true,
+      title: '工作流编辑',
     },
     name: 'WorkflowEdit',
     path: '/aiflow/edit/:uuid',
@@ -12,6 +13,7 @@ const routes: RouteRecordRaw[] = [
   {
     meta: {
       hideInMenu: true,
+      title: '工作流运行',
     },
     name: 'WorkflowRun',
     path: '/aiflow/run/:uuid',

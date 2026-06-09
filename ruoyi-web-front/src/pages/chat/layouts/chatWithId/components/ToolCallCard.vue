@@ -5,6 +5,10 @@ const props = defineProps<{
   toolInfo: ToolCallInfo;
 }>();
 
+const emit = defineEmits<{
+  confirmDraft: [draftId: string];
+}>();
+
 const isExpanded = ref(false);
 
 // 状态图标和颜色映射
@@ -55,19 +59,115 @@ const formattedTime = computed(() => {
 
 // 格式化结果内容（用于展示）
 const formattedResult = computed(() => {
-  if (!props.toolInfo.result)
-    return null;
-  try {
-    // 如果结果是字符串，尝试解析
-    if (typeof props.toolInfo.result === 'string') {
-      return props.toolInfo.result;
-    }
-    return JSON.stringify(props.toolInfo.result, null, 2);
-  }
-  catch {
-    return String(props.toolInfo.result);
+  return formatPanelValue(props.toolInfo.result);
+});
+
+const formattedInput = computed(() => {
+  return formatPanelValue(props.toolInfo.input);
+});
+
+const typeText = computed(() => {
+  switch (props.toolInfo.type) {
+    case 'AGENT':
+      return 'Agent';
+    case 'TOOL':
+      return '工具';
+    case 'GUARD':
+      return '护栏';
+    case 'MODEL':
+      return '模型';
+    default:
+      return props.toolInfo.type || '步骤';
   }
 });
+
+function formatPanelValue(value: unknown) {
+  if (value === undefined || value === null || value === '')
+    return null;
+  try {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return null;
+      }
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        return JSON.stringify(JSON.parse(trimmed), null, 2);
+      }
+      return value;
+    }
+    return JSON.stringify(value, null, 2);
+  }
+  catch {
+    return String(value);
+  }
+}
+
+const parsedResult = computed<Record<string, any> | null>(() => {
+  if (!props.toolInfo.result) {
+    return null;
+  }
+
+  try {
+    const raw = typeof props.toolInfo.result === 'string'
+      ? props.toolInfo.result
+      : JSON.stringify(props.toolInfo.result);
+    const parsed = JSON.parse(raw);
+
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  }
+  catch {
+    return null;
+  }
+
+  return null;
+});
+
+const confirmDraftInfo = computed(() => {
+  if (props.toolInfo.status !== 'success') {
+    return null;
+  }
+
+  const textResult = typeof props.toolInfo.result === 'string' ? props.toolInfo.result : '';
+  const textDraftId = textResult.match(/草稿ID[:：]\s*([0-9a-fA-F-]{16,})/)?.[1]
+    || textResult.match(/draftId["'\s:=：]+([0-9a-fA-F-]{16,})/)?.[1];
+
+  if (textDraftId) {
+    return {
+      draftId: textDraftId,
+      summary: textResult.includes('草稿信息') ? textResult : '',
+      expiresInSeconds: null,
+    };
+  }
+
+  const result = parsedResult.value;
+  if (!result) {
+    return null;
+  }
+
+  const data = result.data && typeof result.data === 'object' ? result.data : result;
+  const draftId = data.draftId || data.draft_id;
+  const needConfirm = data.needConfirm === true || data.action === 'confirm_required';
+
+  if (!needConfirm || !draftId) {
+    return null;
+  }
+
+  return {
+    draftId: String(draftId),
+    summary: data.summary || data.content || data.remark || '',
+    expiresInSeconds: data.expiresInSeconds || data.expires_in_seconds,
+  };
+});
+
+function handleConfirmDraft(event: MouseEvent) {
+  event.stopPropagation();
+  if (!confirmDraftInfo.value) {
+    return;
+  }
+  emit('confirmDraft', confirmDraftInfo.value.draftId);
+}
 </script>
 
 <template>
@@ -83,6 +183,7 @@ const formattedResult = computed(() => {
         </div>
         <!-- 工具名称 -->
         <span class="tool-name">{{ toolInfo.name || '工具调用' }}</span>
+        <span class="tool-type">{{ typeText }}</span>
         <!-- 状态标签 -->
         <el-tag
           :style="{
@@ -115,6 +216,33 @@ const formattedResult = computed(() => {
     <!-- 展开内容 -->
     <el-collapse-transition>
       <div v-show="isExpanded" class="card-content">
+        <div v-if="confirmDraftInfo" class="confirm-section">
+          <div class="confirm-copy">
+            <div class="confirm-title">
+              CRM跟进记录待确认
+            </div>
+            <div v-if="confirmDraftInfo.summary" class="confirm-summary">
+              {{ confirmDraftInfo.summary }}
+            </div>
+            <div v-if="confirmDraftInfo.expiresInSeconds" class="confirm-expire">
+              草稿 {{ Math.floor(Number(confirmDraftInfo.expiresInSeconds) / 60) }} 分钟内有效
+            </div>
+          </div>
+          <el-button type="primary" size="small" @click="handleConfirmDraft">
+            确认入库
+          </el-button>
+        </div>
+
+        <!-- 输入参数 -->
+        <div v-if="formattedInput" class="result-section input-section">
+          <div class="section-label">
+            调用参数
+          </div>
+          <div class="result-content">
+            <pre>{{ formattedInput }}</pre>
+          </div>
+        </div>
+
         <!-- 结果详情 -->
         <div v-if="formattedResult" class="result-section">
           <div class="section-label">
@@ -196,6 +324,16 @@ const formattedResult = computed(() => {
         text-overflow: ellipsis;
       }
 
+      .tool-type {
+        padding: 2px 6px;
+        border-radius: 999px;
+        background-color: #eef2ff;
+        color: #4f46e5;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
       .status-tag {
         display: flex;
         align-items: center;
@@ -242,6 +380,19 @@ const formattedResult = computed(() => {
     .result-section {
       margin-top: 2px;
 
+      &.input-section {
+        margin-bottom: 10px;
+
+        .result-content {
+          background-color: #f8fafc;
+          border: 1px solid #dbe4ef;
+
+          pre {
+            color: #334155;
+          }
+        }
+      }
+
       .section-label {
         font-size: 12px;
         color: #64748b;
@@ -265,6 +416,40 @@ const formattedResult = computed(() => {
           white-space: pre-wrap;
           word-break: break-word;
         }
+      }
+    }
+
+    .confirm-section {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      margin: 2px 0 10px;
+      background-color: #eef6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+
+      .confirm-copy {
+        min-width: 0;
+        color: #1e3a5f;
+      }
+
+      .confirm-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .confirm-summary {
+        color: #334155;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      .confirm-expire {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 12px;
       }
     }
 

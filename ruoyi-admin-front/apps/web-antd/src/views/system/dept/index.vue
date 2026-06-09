@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
 
-import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { VxeGridListeners, VxeGridProps } from '#/adapter/vxe-table';
 import type { Dept } from '#/api/system/dept/model';
+
+type GridEvents = Partial<VxeGridListeners>;
 
 import { nextTick } from 'vue';
 
@@ -75,7 +77,7 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
   formOptions,
   gridOptions,
   gridEvents: {
-    cellDblclick: (e) => {
+    cellDblclick: (e: Parameters<NonNullable<GridEvents['cellDblclick']>>[0]) => {
       const { row = {} } = e;
       if (!row?.children) {
         return;
@@ -85,7 +87,7 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
       row.expand = !isExpanded;
     },
     // 需要监听使用箭头展开的情况 否则展开/折叠的数据不一致
-    toggleTreeExpand: (e) => {
+    toggleTreeExpand: (e: Parameters<NonNullable<GridEvents['toggleTreeExpand']>>[0]) => {
       const { row = {}, expanded } = e;
       row.expand = expanded;
     },

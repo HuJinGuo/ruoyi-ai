@@ -1,5 +1,6 @@
 package org.ruoyi.system.domain.mes;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -20,6 +21,12 @@ public class MesWorkOrderStage extends TenantEntity {
 
     private Long workOrderId;
 
+    @TableField(exist = false)
+    private String workOrderCode;
+
+    @TableField(exist = false)
+    private String projectName;
+
     private String stageCode;
 
     private String stageName;
@@ -27,6 +34,9 @@ public class MesWorkOrderStage extends TenantEntity {
     private String status;
 
     private Long responsibleUserId;
+
+    @TableField(exist = false)
+    private String responsibleUserName;
 
     private Date startTime;
 

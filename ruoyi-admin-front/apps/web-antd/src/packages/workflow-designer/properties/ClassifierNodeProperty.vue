@@ -53,7 +53,7 @@ function onDeleteCategory(category: Category) {
           <div class="flex flex-col w-full bg-gray-100 px-3">
             <div class="mt-2">类别名称</div>
             <div class="mb-2">
-              <Input v-model:value="category.category_name" type="textarea" :auto-size="{ minRows: 1, maxRows: 3 }" />
+              <Input.TextArea v-model:value="category.category_name" :auto-size="{ minRows: 1, maxRows: 3 }" />
             </div>
             <div class="mb-3">下一步节点 UUID</div>
             <div class="mb-3">

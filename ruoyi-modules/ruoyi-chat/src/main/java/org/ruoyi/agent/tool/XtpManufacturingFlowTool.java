@@ -58,6 +58,10 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
     @Tool("按合同ID汇总 XTP 制造闭环状态，包含工单、阶段、工程物料、采购、收料、发料和库存")
     public String xtpManufacturingStatusByContractId(Long contractId) {
         log.info("【XTP工具调用】xtpManufacturingStatusByContractId contractId={}", contractId);
+        return toJson(buildManufacturingStatusByContractId(contractId));
+    }
+
+    private java.util.Map<String, Object> buildManufacturingStatusByContractId(Long contractId) {
         CrmContractMapper contractMapper = SpringUtils.getBean(CrmContractMapper.class);
         MesWorkOrderMapper workOrderMapper = SpringUtils.getBean(MesWorkOrderMapper.class);
         org.ruoyi.system.mapper.mes.MesWorkOrderStageMapper stageMapper = SpringUtils.getBean(org.ruoyi.system.mapper.mes.MesWorkOrderStageMapper.class);
@@ -107,7 +111,7 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
             workOrderDetails.add(detail);
         }
         result.put("workOrderDetails", workOrderDetails);
-        return toJson(result);
+        return result;
     }
 
     @Tool("根据 CRM 合同生成 MES 生产工单草稿")
@@ -228,4 +232,5 @@ public class XtpManufacturingFlowTool implements BuiltinToolProvider {
             return "Error: " + e.getMessage();
         }
     }
+
 }

@@ -21,15 +21,20 @@ public abstract class XtpCrudService<T extends TenantEntity> {
 
     public TableDataInfo<T> selectPageList(T query, PageQuery pageQuery) {
         Page<T> page = baseMapper.selectPage(pageQuery.build(), buildQueryWrapper(query));
+        fillDisplayFields(page.getRecords());
         return TableDataInfo.build(page);
     }
 
     public List<T> selectList(T query) {
-        return baseMapper.selectList(buildQueryWrapper(query));
+        List<T> list = baseMapper.selectList(buildQueryWrapper(query));
+        fillDisplayFields(list);
+        return list;
     }
 
     public T selectById(Serializable id) {
-        return baseMapper.selectById(id);
+        T entity = baseMapper.selectById(id);
+        fillDisplayFields(entity == null ? List.of() : List.of(entity));
+        return entity;
     }
 
     public boolean insert(T entity) {
@@ -45,4 +50,8 @@ public abstract class XtpCrudService<T extends TenantEntity> {
     }
 
     protected abstract Wrapper<T> buildQueryWrapper(T query);
+
+    protected void fillDisplayFields(List<T> records) {
+        // 子类按业务显式补齐列表展示字段。
+    }
 }

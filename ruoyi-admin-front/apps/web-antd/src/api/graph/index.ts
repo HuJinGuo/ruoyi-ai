@@ -1,20 +1,20 @@
-import { requestClient } from '#/api/request';
 import type {
+  ExtractionResult,
   ExtractParams,
   GraphData,
   GraphInstance,
+  GraphNode,
+  GraphPath,
+  GraphRetrievalResult,
   GraphStats,
   IngestParams,
   NeighborQueryParams,
   PathQueryParams,
   RetrieveParams,
   SearchParams,
-  ExtractionResult,
-  GraphRetrievalResult,
-  GraphPath,
-  GraphNode,
-  GraphBuildTask,
 } from './model';
+
+import { requestClient } from '#/api/request';
 
 /**
  * 知识图谱API接口
@@ -48,7 +48,9 @@ export function graphInstanceUpdate(data: Partial<GraphInstance>) {
  */
 export function graphInstanceRemove(id: string | string[]) {
   if (Array.isArray(id)) {
-    return requestClient.delete<any>('/graph/instance/batch', { data: { ids: id } });
+    return requestClient.delete<any>('/graph/instance/batch', {
+      data: { ids: id },
+    });
   }
   return requestClient.delete<any>(`/graph/instance/${id}`);
 }
@@ -105,7 +107,9 @@ export function graphQueryByKnowledge(knowledgeId: string, limit?: number) {
  * 搜索实体
  */
 export function graphSearchEntity(params: SearchParams) {
-  return requestClient.get<GraphNode[]>('/graph/query/search/entity', { params });  // ⭐ 修复路径
+  return requestClient.get<GraphNode[]>('/graph/query/search/entity', {
+    params,
+  }); // ⭐ 修复路径
 }
 
 /**
@@ -156,6 +160,8 @@ export function graphIngestText(data: IngestParams) {
  * 图谱检索
  */
 export function graphRetrieve(data: RetrieveParams) {
-  return requestClient.post<GraphRetrievalResult>('/graph/query/retrieve', data);
+  return requestClient.post<GraphRetrievalResult>(
+    '/graph/query/retrieve',
+    data,
+  );
 }
-

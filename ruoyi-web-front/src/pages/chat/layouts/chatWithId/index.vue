@@ -26,6 +26,7 @@ type MessageItem = BubbleProps & {
   reasoning_content?: string;
   toolCalls?: ToolCallInfo[];
   toolCallsCollapsed?: boolean;
+  agentProgress?: string;
   class?: string;
 };
 
@@ -47,9 +48,11 @@ const bubbleItems = ref<MessageItem[]>([]);
 const bubbleListRef = ref<BubbleListInstance | null>(null);
 const executionEvents = ref<ToolCallInfo[]>([]);
 const activeAgentRunId = ref('');
+const hasAssistantContent = ref(false);
 
 // 工具调用事件计数器（用于生成唯一 key）
 let toolCallKeyCounter = 0;
+let traceOrderCounter = 0;
 
 const copyIconMap = ref<Record<number, string>>({}); // 记录每条消息的复制按钮图标
 const editingMessageKeys = ref<number[]>([]); // 跟踪多个编辑中的消息
@@ -132,10 +135,13 @@ function handleError(err: any) {
 }
 
 async function startSSE(chatContent: string) {
+  let endedWithError = false;
   try {
     toolCallKeyCounter = 0;
+    traceOrderCounter = 0;
     executionEvents.value = [];
     activeAgentRunId.value = '';
+    hasAssistantContent.value = false;
 
     // 添加用户输入的消息
     inputValue.value = '';
@@ -151,19 +157,19 @@ async function startSSE(chatContent: string) {
     // 标记是否收到第一个有效数据 chunk（用于清除 loading 状态）
     let hasReceivedFirstContent = false;
 
-    const useAgentMode = chatSenderRef.value?.isReasoningEnabled || false;
+    const useAgentMode = shouldUseInternalAgent(lastUserMessage?.content ?? '');
 
     for await (const chunk of stream({
       assistantCode: useAgentMode ? 'internal-unified' : undefined,
       model: modelStore.currentModelInfo.modelName ?? '',
       content: lastUserMessage?.content ?? '',
       sessionId: route.params?.id !== 'not_login' ? String(route.params?.id) : undefined,
-      enableThinking: !useAgentMode && (chatSenderRef.value?.isReasoningEnabled || false),
+      enableThinking: chatSenderRef.value?.isReasoningEnabled || useAgentMode,
       knowledgeId: chatStore.knowledgeId || undefined,
     })) {
       // 处理数据块 - chunk.result 可能是字符串或对象
       // 返回 true 表示流结束
-      const isStreamEnd = handleDataChunk(chunk.result as AnyObject | string);
+      const isStreamEnd = await handleDataChunk(chunk.result as AnyObject | string);
 
       // 在收到第一个有效数据后清除 loading 状态（跳过连接状态事件）
       if (!hasReceivedFirstContent && chunk.result !== ':connected' && chunk.result !== ':disconnected' && !isStreamEnd) {
@@ -186,6 +192,7 @@ async function startSSE(chatContent: string) {
     }
   }
   catch (err) {
+    endedWithError = true;
     handleError(err);
     // 出错时也要清除 loading 状态
     if (bubbleItems.value.length) {
@@ -195,6 +202,8 @@ async function startSSE(chatContent: string) {
     }
   }
   finally {
+    finalizePendingTraceEvents(endedWithError ? 'error' : 'success');
+    setAgentProgress('');
     // 停止打字器状态
     if (bubbleItems.value.length) {
       const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
@@ -212,8 +221,17 @@ async function startSSE(chatContent: string) {
   }
 }
 
+function handleConfirmDraft(draftId: string) {
+  if (isLoading.value) {
+    ElMessage.warning('当前对话还在执行中，请稍后再确认');
+    return;
+  }
+
+  startSSE(`确认新增这条CRM跟进记录，draftId: ${draftId}`);
+}
+
 // 封装数据处理逻辑
-function handleDataChunk(chunk: AnyObject | string): boolean {
+async function handleDataChunk(chunk: AnyObject | string): Promise<boolean> {
   console.log('[SSE] 收到 chunk:', chunk, 'type:', typeof chunk);
 
   try {
@@ -223,16 +241,20 @@ function handleDataChunk(chunk: AnyObject | string): boolean {
         return false;
       }
 
-      return parseSseStringEvents(chunk).reduce(
-        (shouldEnd, event) => handleSseEvent(event.data, event.eventType) || shouldEnd,
-        false,
-      );
+      let shouldEnd = false;
+      for (const event of parseSseStringEvents(chunk)) {
+        shouldEnd = handleSseEvent(event.data, event.eventType) || shouldEnd;
+        await waitForSseRenderFrame(event.eventType || event.data?.event || '');
+      }
+      return shouldEnd;
     }
     else if (typeof chunk === 'object' && chunk !== null) {
       const eventType = chunk.event || '';
 
       if (eventType || chunk.done === true) {
-        return handleSseEvent(chunk, eventType);
+        const shouldEnd = handleSseEvent(chunk, eventType);
+        await waitForSseRenderFrame(eventType);
+        return shouldEnd;
       }
 
       const reasoningChunk = chunk?.choices?.[0]?.delta?.reasoning_content;
@@ -260,9 +282,16 @@ function handleDataChunk(chunk: AnyObject | string): boolean {
   return false;
 }
 
+async function waitForSseRenderFrame(eventType: string) {
+  await nextTick();
+  if (eventType.startsWith('agent_')) {
+    await new Promise(resolve => setTimeout(resolve, 48));
+  }
+}
+
 function parseSseStringEvents(chunk: string) {
   return chunk
-    .split(/\n\n+/)
+    .split(/\n{2,}/)
     .map(block => block.trim())
     .filter(Boolean)
     .map((block) => {
@@ -315,6 +344,8 @@ function handleSseEvent(dataObj: AnyObject, rawEventType = ''): boolean {
   }
 
   if (eventType === 'error' && dataObj.error) {
+    finalizePendingTraceEvents('error');
+    setAgentProgress('');
     ElMessage.error(dataObj.error);
   }
 
@@ -332,14 +363,28 @@ function handleAgentTraceEvent(eventType: string, dataObj: AnyObject) {
   if (eventType === 'agent_run_start' && payload.runId) {
     activeAgentRunId.value = payload.runId;
     executionEvents.value = [];
+    traceOrderCounter = 0;
+    setAgentProgress(payload.title ? `正在启动：${payload.title}` : '正在启动内部统一入口 Agent');
+    syncCurrentAssistantToolCalls();
+    bubbleItems.value = [...bubbleItems.value];
+    return;
   }
   else if (payload.runId && activeAgentRunId.value && payload.runId !== activeAgentRunId.value) {
     return;
   }
 
+  if (eventType === 'agent_run_done') {
+    finalizePendingTraceEvents(normalizeTraceStatus(payload.status, eventType));
+    setAgentProgress('');
+    bubbleItems.value = [...bubbleItems.value];
+    return;
+  }
+
   const status = normalizeTraceStatus(payload.status, eventType);
-  const name = payload.name || payload.title || eventType;
-  const stepId = payload.stepId || payload.runId || `${eventType}-${executionEvents.value.length}`;
+  const stepId = resolveTraceStepId(eventType, payload);
+  const existingIndex = executionEvents.value.findIndex(item => item.stepId === stepId);
+  const existingEvent = existingIndex >= 0 ? executionEvents.value[existingIndex] : null;
+  const name = resolveTraceName(eventType, payload, existingEvent);
 
   const traceInfo: ToolCallInfo = {
     key: ++toolCallKeyCounter,
@@ -350,24 +395,84 @@ function handleAgentTraceEvent(eventType: string, dataObj: AnyObject) {
     type: payload.type || 'AGENT',
     runId: payload.runId,
     stepId,
-    input: payload.input,
+    input: extractTraceInput(payload),
+    order: existingEvent?.order ?? ++traceOrderCounter,
   };
 
-  const existingIndex = executionEvents.value.findIndex(item => item.stepId === stepId && item.name === name);
   if (existingIndex >= 0) {
     executionEvents.value[existingIndex] = {
       ...executionEvents.value[existingIndex],
       ...traceInfo,
+      key: executionEvents.value[existingIndex].key,
     };
   }
   else {
     executionEvents.value = [...executionEvents.value, traceInfo];
   }
 
+  updateAgentProgress(traceInfo, eventType);
+
   const assistantMessage = getCurrentAssistantMessage();
   if (assistantMessage) {
+    syncCurrentAssistantToolCalls();
     bubbleItems.value = [...bubbleItems.value];
   }
+}
+
+function resolveTraceStepId(eventType: string, payload: AnyObject) {
+  if (eventType === 'agent_plan' && payload.runId) {
+    return `plan:${payload.runId}`;
+  }
+  if ((eventType.startsWith('agent_tool') || payload.type === 'TOOL') && (payload.stepId || payload.id || payload.name)) {
+    return payload.stepId || `tool:${payload.id || payload.name}`;
+  }
+  return payload.stepId || payload.id || payload.runId || `${eventType}-${executionEvents.value.length}`;
+}
+
+function resolveTraceName(eventType: string, payload: AnyObject, existingEvent: ToolCallInfo | null) {
+  if (eventType === 'agent_plan') {
+    return '执行计划';
+  }
+  if (eventType.startsWith('agent_tool') || payload.type === 'TOOL') {
+    return payload.name || payload.toolName || existingEvent?.name || '工具调用';
+  }
+  return payload.name || payload.title || payload.toolName || existingEvent?.name || eventType;
+}
+
+function updateAgentProgress(traceInfo: ToolCallInfo, eventType: string) {
+  if (eventType === 'agent_run_done') {
+    setAgentProgress('');
+    return;
+  }
+  if (traceInfo.status !== 'pending') {
+    return;
+  }
+  setAgentProgress(`正在执行：${traceInfo.name}`);
+}
+
+function setAgentProgress(text: string) {
+  const lastMessage = getCurrentAssistantMessage();
+  if (!lastMessage || hasAssistantContent.value) {
+    return;
+  }
+  lastMessage.loading = Boolean(text);
+  lastMessage.agentProgress = text;
+  bubbleItems.value = [...bubbleItems.value];
+}
+
+function finalizePendingTraceEvents(status: ToolCallInfo['status']) {
+  if (!executionEvents.value.some(item => item.status === 'pending')) {
+    syncCurrentAssistantToolCalls();
+    return;
+  }
+  executionEvents.value = executionEvents.value.map(item => item.status === 'pending'
+    ? {
+        ...item,
+        status,
+        result: item.result || (status === 'success' ? '已完成' : '执行中断'),
+      }
+    : item);
+  syncCurrentAssistantToolCalls();
 }
 
 function normalizeTraceStatus(status: unknown, eventType: string): ToolCallInfo['status'] {
@@ -381,10 +486,18 @@ function normalizeTraceStatus(status: unknown, eventType: string): ToolCallInfo[
 }
 
 function formatTraceResult(payload: AnyObject, eventType: string) {
-  if (payload.result !== undefined) {
-    return typeof payload.result === 'string' ? payload.result : JSON.stringify(payload.result, null, 2);
+  const result = payload.result ?? payload.output ?? payload.response ?? payload.rawResult ?? payload.error;
+  if (result !== undefined && result !== null) {
+    return typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+  }
+  if (eventType.endsWith('_start')) {
+    return null;
   }
   return JSON.stringify({ event: eventType, ...payload }, null, 2);
+}
+
+function extractTraceInput(payload: AnyObject) {
+  return payload.input ?? payload.arguments ?? payload.args ?? payload.params ?? payload.request ?? null;
 }
 
 function appendReasoningContent(reasoningContent: string) {
@@ -404,7 +517,7 @@ function handleMcpEvent(dataObj: AnyObject) {
   try {
     const content = typeof dataObj.content === 'string'
       ? JSON.parse(dataObj.content)
-      : dataObj.content;
+      : (dataObj.content || dataObj);
 
     if (content?.runId && activeAgentRunId.value && content.runId !== activeAgentRunId.value) {
       return;
@@ -412,19 +525,20 @@ function handleMcpEvent(dataObj: AnyObject) {
 
     const toolName = content.name || content.toolName || 'Unknown Tool';
     const toolStatus = content.status || 'pending';
-    const toolResult = content.result || null;
-    const toolStepId = content.stepId || content.id || toolName;
+    const toolResult = content.result ?? content.output ?? content.rawResult ?? content.error ?? null;
+    const toolStepId = content.stepId || content.id || `mcp:${toolName}`;
     const normalizedStatus = normalizeTraceStatus(toolStatus, toolStatus === 'pending' ? 'tool_call_start' : 'tool_call_done');
     const traceInfo: ToolCallInfo = {
       key: ++toolCallKeyCounter,
       name: toolName,
       status: normalizedStatus,
       result: toolResult,
-      timestamp: Date.now(),
+      timestamp: content.timestamp || Date.now(),
       type: 'TOOL',
       runId: content.runId,
       stepId: toolStepId,
-      input: content.input,
+      input: extractTraceInput(content),
+      order: ++traceOrderCounter,
     };
 
     const index = executionEvents.value.findIndex(
@@ -437,6 +551,7 @@ function handleMcpEvent(dataObj: AnyObject) {
         ...updatedEvents[index],
         ...traceInfo,
         key: updatedEvents[index].key,
+        order: updatedEvents[index].order,
       };
       executionEvents.value = updatedEvents;
     }
@@ -444,6 +559,7 @@ function handleMcpEvent(dataObj: AnyObject) {
       executionEvents.value = [...executionEvents.value, traceInfo];
     }
 
+    syncCurrentAssistantToolCalls();
     bubbleItems.value = [...bubbleItems.value];
     console.log('[SSE] 执行上下文列表:', executionEvents.value);
   }
@@ -462,11 +578,113 @@ function getCurrentAssistantMessage() {
   return null;
 }
 
+function syncCurrentAssistantToolCalls() {
+  const assistantMessage = getCurrentAssistantMessage();
+  if (!assistantMessage) {
+    return;
+  }
+  assistantMessage.toolCalls = [...executionEvents.value].sort((a, b) => {
+    const orderA = a.order ?? a.timestamp ?? 0;
+    const orderB = b.order ?? b.timestamp ?? 0;
+    return orderA - orderB;
+  });
+}
+
+function isAssistantStreaming(item: MessageItem) {
+  if (item.role !== 'system') {
+    return false;
+  }
+  const lastMessage = bubbleItems.value[bubbleItems.value.length - 1];
+  return Boolean(isLoading.value && lastMessage?.key === item.key);
+}
+
+function traceStatusText(status: ToolCallInfo['status']) {
+  if (status === 'pending') {
+    return '执行中';
+  }
+  if (status === 'error') {
+    return '失败';
+  }
+  return '完成';
+}
+
+function successfulToolCallCount(toolCalls?: ToolCallInfo[]) {
+  return toolCalls?.filter(trace => trace.status === 'success').length ?? 0;
+}
+
+function visibleToolCalls(toolCalls?: ToolCallInfo[]) {
+  return toolCalls?.slice(0, 4) ?? [];
+}
+
+function shouldShowReasoningPanel(item: MessageItem) {
+  return Boolean(item.reasoning_content || item.toolCalls?.length || item.agentProgress || isAssistantStreaming(item));
+}
+
+function executionProcessRows(item: MessageItem) {
+  const rows: string[] = [];
+  if (item.agentProgress) {
+    rows.push(item.agentProgress);
+  }
+  if (item.toolCalls?.length) {
+    rows.push(
+      ...item.toolCalls
+        .slice(-6)
+        .map(trace => `${traceStatusText(trace.status)}：${trace.name}`),
+    );
+  }
+  if (!rows.length && isAssistantStreaming(item)) {
+    rows.push('正在连接内部统一入口 Agent，准备分析问题并选择业务工具。');
+  }
+  return rows;
+}
+
+function shouldUseInternalAgent(content: string) {
+  if (chatSenderRef.value?.isReasoningEnabled) {
+    return true;
+  }
+  const text = content.toLowerCase();
+  const businessKeywords = [
+    '客户',
+    '公司',
+    '联系人',
+    '合同',
+    '商机',
+    '报价',
+    '回款',
+    '付款',
+    '跟进',
+    '拜访',
+    '工单',
+    '生产',
+    '进度',
+    '节点',
+    '阶段',
+    '物料',
+    '库存',
+    '采购',
+    '收料',
+    '发料',
+    '入库',
+    '出库',
+    'crm',
+    'mes',
+    'srm',
+    'wms',
+  ];
+  return businessKeywords.some(keyword => text.includes(keyword));
+}
+
 function handleContentChunk(content: string) {
   const lastIndex = bubbleItems.value.length - 1;
   const lastMessage = bubbleItems.value[lastIndex];
   if (!lastMessage) {
     return;
+  }
+
+  if (content) {
+    hasAssistantContent.value = true;
+    lastMessage.agentProgress = '';
+    lastMessage.loading = false;
   }
 
   let currentText = content;
@@ -554,8 +772,6 @@ function addMessage(message: string, isUser: boolean) {
   bubbleItems.value.push(obj);
 }
 
-function handleChange(_payload: { value: boolean; status: ThinkingStatus }) {}
-
 function startEditing(item: MessageItem) {
   if (!editingMessageKeys.value.includes(item.key)) {
     editingMessageKeys.value.push(item.key);
@@ -589,30 +805,112 @@ function handleCreateNewChat() {
 </script>
 
 <template>
-  <div class="chat-with-id-container">
+  <div class="chat-with-id-container" translate="no">
     <div class="chat-warp">
-      <BubbleList ref="bubbleListRef" :list="bubbleItems" max-height="calc(100vh - 240px)">
-        <template #header="{ item }">
-          <Thinking
-            v-if="item.reasoning_content"
-            v-model="item.thinlCollapse"
-            :content="item.reasoning_content"
-            :status="item.thinkingStatus"
-            class="thinking-chain-warp"
-            @change="handleChange"
-          />
-        </template>
-
+      <BubbleList ref="bubbleListRef" :list="bubbleItems" max-height="calc(100vh - 216px)">
         <template #content="{ item }">
           <div v-if="item.role === 'system'" class="assistant-answer-card">
+            <div class="assistant-answer-head">
+              <div class="assistant-title-wrap">
+                <span class="assistant-orb" :class="{ active: isAssistantStreaming(item) }" />
+                <div>
+                  <div class="assistant-title">
+                    内部统一入口 Agent
+                  </div>
+                  <div class="assistant-subtitle">
+                    {{ isAssistantStreaming(item) ? '正在流式生成回答' : '回答已同步' }}
+                  </div>
+                </div>
+              </div>
+              <span class="stream-status" :class="{ live: isAssistantStreaming(item) }">
+                {{ isAssistantStreaming(item) ? 'Live' : 'Done' }}
+              </span>
+            </div>
+
+            <div v-if="shouldShowReasoningPanel(item)" class="reasoning-panel" :class="{ expanded: !item.thinlCollapse }">
+              <button type="button" class="reasoning-toggle" @click="item.thinlCollapse = !item.thinlCollapse">
+                <span class="reasoning-dot" :class="{ active: item.thinkingStatus === 'thinking' }" />
+                <span>思考 / 执行过程</span>
+                <span class="reasoning-state">{{ isAssistantStreaming(item) ? '进行中' : '已完成' }}</span>
+                <el-icon class="reasoning-arrow" :class="{ open: !item.thinlCollapse }">
+                  <ArrowDown />
+                </el-icon>
+              </button>
+              <div v-show="!item.thinlCollapse" class="reasoning-content">
+                <div v-if="executionProcessRows(item).length" class="reasoning-steps">
+                  <div v-for="row in executionProcessRows(item)" :key="row" class="reasoning-step">
+                    {{ row }}
+                  </div>
+                </div>
+                <div v-if="item.reasoning_content" class="reasoning-text">
+                  {{ item.reasoning_content }}
+                </div>
+              </div>
+            </div>
+
+            <div v-if="item.toolCalls?.length" class="agent-trace-panel" :class="{ expanded: !item.toolCallsCollapsed }">
+              <button type="button" class="agent-trace-toggle" @click="item.toolCallsCollapsed = !item.toolCallsCollapsed">
+                <span class="agent-trace-title">
+                  <span class="agent-trace-dot" :class="{ active: isAssistantStreaming(item) }" />
+                  Agent 调用过程
+                </span>
+                <span class="agent-trace-count">
+                  {{ successfulToolCallCount(item.toolCalls) }}/{{ item.toolCalls.length }} 完成
+                </span>
+                <el-icon class="agent-trace-arrow" :class="{ open: !item.toolCallsCollapsed }">
+                  <ArrowDown />
+                </el-icon>
+              </button>
+
+              <div v-show="item.toolCallsCollapsed" class="agent-trace-summary">
+                <div
+                  v-for="trace in visibleToolCalls(item.toolCalls)"
+                  :key="trace.key || trace.stepId"
+                  class="inline-trace-item"
+                  :class="trace.status"
+                >
+                  <span class="trace-pulse" />
+                  <span class="trace-name">{{ trace.name }}</span>
+                  <span class="trace-status">{{ traceStatusText(trace.status) }}</span>
+                </div>
+              </div>
+
+              <el-collapse-transition>
+                <div v-show="!item.toolCallsCollapsed" class="agent-trace-list">
+                  <ToolCallCard
+                    v-for="trace in item.toolCalls"
+                    :key="trace.key || trace.stepId"
+                    :tool-info="trace"
+                    @confirm-draft="handleConfirmDraft"
+                  />
+                </div>
+              </el-collapse-transition>
+            </div>
+
+            <div v-if="item.agentProgress && !item.content" class="agent-progress-card">
+              <span class="agent-progress-dot" />
+              <span>{{ item.agentProgress }}</span>
+            </div>
+            <div v-else-if="!item.content && isAssistantStreaming(item)" class="answer-waiting-card">
+              <span class="agent-progress-dot" />
+              <div>
+                <div class="waiting-title">
+                  正在协作查询
+                </div>
+                <div class="waiting-desc">
+                  已开启流式响应，查询到结果后会立即逐段展示。
+                </div>
+              </div>
+            </div>
             <XMarkdown
               v-if="item.content"
               :markdown="item.content"
               :code-x-render="codeXRender"
               class="markdown-body"
               :themes="{ light: 'github-light', dark: 'github-dark' }"
-              default-theme-mode="dark"
+              default-theme-mode="light"
             />
+            <span v-if="item.content && isAssistantStreaming(item)" class="streaming-caret" />
           </div>
 
           <div v-if="item.content && item.role === 'user'" class="userContent">
@@ -680,45 +978,6 @@ function handleCreateNewChat() {
         />
       </div>
     </div>
-
-    <aside class="agent-execution-panel">
-      <div class="execution-header">
-        <div>
-          <div class="execution-title">
-            执行上下文
-          </div>
-          <div class="execution-subtitle">
-            Agent、工具与计划
-          </div>
-        </div>
-        <el-tag size="small" type="info">
-          {{ executionEvents.length }} steps
-        </el-tag>
-      </div>
-
-      <div class="execution-toolbar">
-        <span>{{ executionEvents.filter(item => item.status === 'success').length }} done</span>
-        <span>{{ executionEvents.filter(item => item.status === 'pending').length }} running</span>
-        <button type="button" @click="executionEvents = []">
-          清空
-        </button>
-      </div>
-
-      <div class="execution-hint">
-        工具详情只在这里滚动展示，不占用对话正文空间。
-      </div>
-
-      <div class="execution-list">
-        <ToolCallCard
-          v-for="trace in executionEvents"
-          :key="trace.key"
-          :tool-info="trace"
-        />
-        <div v-if="!executionEvents.length" class="execution-empty">
-          开启内部统一 Agent 后，这里会显示协作步骤。
-        </div>
-      </div>
-    </aside>
   </div>
 </template>
 
@@ -766,6 +1025,67 @@ function handleCreateNewChat() {
   gap: 4px;
 }
 
+.agent-progress-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  margin: 12px 14px 0;
+  padding: 10px 14px;
+  color: #42526b;
+  background: #f8fafc;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.agent-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4f7cff;
+  box-shadow: 0 0 0 0 rgb(79 124 255 / 45%);
+  animation: agent-progress-pulse 1.3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.answer-waiting-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 12px 14px 0;
+  padding: 12px 14px;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e4ebf5;
+  border-radius: 8px;
+}
+
+.waiting-title {
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.waiting-desc {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@keyframes agent-progress-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(79 124 255 / 45%);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgb(79 124 255 / 0%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(79 124 255 / 0%);
+  }
+}
+
 .copy-button-container {
   position: absolute;
   bottom: -28px;
@@ -802,21 +1122,26 @@ function handleCreateNewChat() {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  justify-content: center;
-  gap: 28px;
+  justify-content: flex-start;
+  gap: 0;
   width: 100%;
-  max-width: 1280px;
+  max-width: none;
   height: 100%;
-  padding: 0 24px;
+  padding: 0 28px 0 18px;
   box-sizing: border-box;
+  background:
+    linear-gradient(90deg, #f7f9fc 0, #ffffff 230px, #ffffff 100%),
+    #ffffff;
 
   .chat-warp {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 100%;
-    max-width: 800px;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 1050px;
     height: calc(100vh - 60px);
+    margin: 0;
 
     .thinking-chain-warp {
       margin-bottom: 12px;
@@ -827,7 +1152,8 @@ function handleCreateNewChat() {
       flex-direction: column;
       gap: 10px;
       width: 100%;
-      margin-bottom: 22px;
+      max-width: 900px;
+      margin: 0 0 18px;
 
       .sender-actions-row {
         display: flex;
@@ -844,7 +1170,7 @@ function handleCreateNewChat() {
         user-select: none;
         background-color: #ffffff;
         border: 1px solid rgb(0 0 0 / 10%);
-        border-radius: 16px;
+        border-radius: 8px;
         box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
         transition: all 0.2s ease;
 
@@ -882,11 +1208,21 @@ function handleCreateNewChat() {
 
   :deep() {
     .el-bubble-list {
-      padding-top: 24px;
+      padding: 22px 0 12px;
     }
     .el-bubble {
-      padding: 0 12px;
-      padding-bottom: 24px;
+      padding: 0 0 22px;
+    }
+    .el-bubble-start .el-bubble-content,
+    .el-bubble-start .el-bubble-content-wrapper {
+      width: 100%;
+      max-width: 100% !important;
+    }
+    .el-bubble-start .el-bubble-content-wrapper {
+      justify-content: flex-start;
+    }
+    .el-bubble-end .el-bubble-content {
+      max-width: min(680px, 84%);
     }
     .el-typewriter {
       overflow: hidden;
@@ -912,107 +1248,486 @@ function handleCreateNewChat() {
   }
 }
 
-.agent-execution-panel {
-  width: 360px;
-  height: calc(100vh - 60px);
-  border-left: 1px solid #edf0f5;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.execution-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 22px 18px 14px;
-  border-bottom: 1px solid #edf0f5;
-}
-
-.execution-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.execution-subtitle {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #8a94a6;
-}
-
-.execution-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 18px;
-  color: #6b7280;
-  font-size: 12px;
-
-  span {
-    padding: 3px 8px;
-    border-radius: 7px;
-    background: #f3f5f8;
-    font-weight: 650;
-  }
-
-  button {
-    border: none;
-    background: transparent;
-    color: #5b6472;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 3px 4px;
-  }
-}
-
-.execution-hint {
-  margin: 0 18px 10px;
-  padding: 10px 12px;
-  border: 1px dashed #d9dee8;
-  border-radius: 8px;
-  color: #8a94a6;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.execution-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 18px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.execution-empty {
-  color: #9aa3b2;
-  font-size: 13px;
-  padding: 20px 4px;
-}
-
 @media (max-width: 1180px) {
   .chat-with-id-container {
     padding: 0 16px;
   }
-
-  .agent-execution-panel {
-    display: none;
-  }
 }
 
 .assistant-answer-card {
-  width: min(100%, 680px);
-  padding: 12px 14px;
-  background: linear-gradient(180deg, rgb(248 250 252 / 92%), rgb(255 255 255 / 96%));
-  border: 1px solid rgb(226 232 240 / 90%);
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgb(15 23 42 / 6%);
+  width: min(100%, 920px);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #dfe7f2;
+  border-radius: 10px;
+  box-shadow: 0 12px 34px rgb(15 23 42 / 8%);
+
+  .assistant-answer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 16px;
+    border-bottom: 1px solid #e8eef6;
+    background:
+      linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  }
+
+  .assistant-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .assistant-orb {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #94a3b8;
+    box-shadow: 0 0 0 5px rgb(148 163 184 / 14%);
+    flex-shrink: 0;
+
+    &.active {
+      background: #1677ff;
+      box-shadow: 0 0 0 0 rgb(22 119 255 / 36%);
+      animation: agent-progress-pulse 1.25s ease-in-out infinite;
+    }
+  }
+
+  .assistant-title {
+    font-size: 15px;
+    line-height: 1.2;
+    font-weight: 750;
+    color: #172033;
+  }
+
+  .assistant-subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .stream-status {
+    flex-shrink: 0;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+    color: #64748b;
+    background: #eef2f7;
+
+    &.live {
+      color: #075985;
+      background: #e0f2fe;
+    }
+  }
+
+  .reasoning-panel {
+    margin: 12px 14px 0;
+    border: 1px solid #dbe4ef;
+    border-radius: 8px;
+    background: #f8fafc;
+    overflow: hidden;
+
+    &.expanded {
+      background: #ffffff;
+    }
+  }
+
+  .reasoning-toggle {
+    width: 100%;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 11px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .reasoning-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+
+    &.active {
+      background: #f59e0b;
+      box-shadow: 0 0 0 4px rgb(245 158 11 / 16%);
+    }
+  }
+
+  .reasoning-state {
+    margin-left: auto;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  .reasoning-arrow {
+    color: #64748b;
+    transition: transform 0.2s ease;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .reasoning-content {
+    max-height: 220px;
+    overflow: auto;
+    padding: 0 12px 12px 26px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.72;
+  }
+
+  .reasoning-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .reasoning-step {
+    position: relative;
+    padding-left: 14px;
+    color: #334155;
+    font-size: 12px;
+    line-height: 1.55;
+
+    &::before {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      width: 6px;
+      height: 6px;
+      content: '';
+      background: #94a3b8;
+      border-radius: 50%;
+    }
+  }
+
+  .reasoning-text {
+    padding-top: 8px;
+    border-top: 1px dashed #dbe4ef;
+  }
+
+  .agent-trace-panel {
+    margin: 12px 14px 0;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    background: #f8fbff;
+    overflow: hidden;
+
+    &.expanded {
+      background: #ffffff;
+    }
+  }
+
+  .agent-trace-toggle {
+    width: 100%;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #1e3a8a;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .agent-trace-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .agent-trace-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+
+    &.active {
+      background: #f59e0b;
+      animation: agent-progress-pulse 1.25s ease-in-out infinite;
+    }
+  }
+
+  .agent-trace-count {
+    margin-left: auto;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .agent-trace-arrow {
+    color: #64748b;
+    transition: transform 0.2s ease;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .agent-trace-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 6px 10px;
+    padding: 0 12px 12px;
+  }
+
+  .agent-trace-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 0 12px 12px;
+  }
+
+  .inline-trace-item {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 26px;
+    color: #475569;
+    font-size: 12px;
+
+    &.pending .trace-pulse {
+      background: #f59e0b;
+      animation: agent-progress-pulse 1.25s ease-in-out infinite;
+    }
+
+    &.success .trace-pulse {
+      background: #22c55e;
+    }
+
+    &.error .trace-pulse {
+      background: #ef4444;
+    }
+  }
+
+  .trace-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+  }
+
+  .trace-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .trace-status {
+    color: #64748b;
+    font-weight: 700;
+  }
 
   :deep(.elx-xmarkdown-container) {
-    padding: 10px 0 0;
+    padding: 12px 14px 16px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  :deep(.markdown-body) {
+    color: #172033;
+    font-size: 13px;
+    line-height: 1.58;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    word-break: break-word;
+  }
+
+  :deep(.markdown-body p) {
+    margin: 0 0 8px;
+  }
+
+  :deep(.markdown-body strong) {
+    color: #0f172a;
+    font-weight: 800;
+  }
+
+  :deep(.markdown-body mark) {
+    padding: 1px 5px;
+    border-radius: 5px;
+    color: #b42318;
+    background: #fff1f0;
+    box-decoration-break: clone;
+    font-weight: 800;
+  }
+
+  :deep(.markdown-body h1),
+  :deep(.markdown-body h2),
+  :deep(.markdown-body h3),
+  :deep(.markdown-body h4) {
+    margin: 14px 0 8px;
+    color: #0f172a;
+    line-height: 1.28;
+    letter-spacing: 0;
+  }
+
+  :deep(.markdown-body h1) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0 8px;
+    font-size: 17px;
+  }
+
+  :deep(.markdown-body h2) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #2563eb;
+    border-radius: 7px;
+    background: #f8fbff;
+    font-size: 14px;
+  }
+
+  :deep(.markdown-body h3) {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  :deep(.markdown-body h2 + table),
+  :deep(.markdown-body h3 + table) {
+    margin-top: 8px;
+  }
+
+  :deep(.markdown-body ul),
+  :deep(.markdown-body ol) {
+    padding-left: 18px;
+    margin: 6px 0 10px;
+  }
+
+  :deep(.markdown-body li) {
+    margin: 3px 0;
+  }
+
+  :deep(.markdown-body table) {
+    display: table;
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+    margin: 10px 0 12px;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border: 1px solid #d6e0ec;
+    border-radius: 7px;
+    font-size: 12px;
+    table-layout: fixed;
+  }
+
+  :deep(.markdown-body thead th) {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #eef4fb;
+    color: #223047;
+    font-weight: 750;
+  }
+
+  :deep(.markdown-body th),
+  :deep(.markdown-body td) {
+    min-width: 68px;
+    max-width: 190px;
+    padding: 7px 9px;
+    border-right: 1px solid #d6e0ec;
+    border-bottom: 1px solid #d6e0ec;
+    color: #172033;
+    vertical-align: top;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.45;
+  }
+
+  :deep(.markdown-body td:first-child),
+  :deep(.markdown-body th:first-child) {
+    color: #334155;
+    font-weight: 750;
+  }
+
+  :deep(.markdown-body th:last-child),
+  :deep(.markdown-body td:last-child) {
+    border-right: 0;
+  }
+
+  :deep(.markdown-body tbody tr:last-child td) {
+    border-bottom: 0;
+  }
+
+  :deep(.markdown-body tbody tr:nth-child(even) td) {
+    background: #f9fbfe;
+  }
+
+  :deep(.markdown-body tbody tr:hover td) {
+    background: #f2f7ff;
+  }
+
+  :deep(.markdown-body table strong) {
+    color: #b42318;
+    font-weight: 850;
+  }
+
+  :deep(.markdown-body code:not(pre code)) {
+    padding: 1px 5px;
+    border: 1px solid #dbe4ef;
+    border-radius: 5px;
+    background: #f6f8fb;
+    color: #0f3f8a;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  :deep(.markdown-body pre) {
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+  }
+
+  .streaming-caret {
+    display: inline-block;
+    width: 7px;
+    height: 18px;
+    margin: 0 0 -3px 16px;
+    border-radius: 999px;
+    background: #1677ff;
+    animation: stream-caret 0.85s steps(2, start) infinite;
   }
 }
 
+@keyframes stream-caret {
+  0%, 45% {
+    opacity: 1;
+  }
+  46%, 100% {
+    opacity: 0.18;
+  }
+}
 </style>

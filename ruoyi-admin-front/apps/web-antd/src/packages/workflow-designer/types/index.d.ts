@@ -61,5 +61,3 @@ export interface UIWorkflow {
   edges: any[]
 }
 
-
-

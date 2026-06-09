@@ -4,7 +4,7 @@ import { Button, Input, InputNumber, Switch, Tabs, Upload, message } from 'ant-d
 import type { UploadFile } from 'ant-design-vue'
 import RuntimeNodes from './RuntimeNodes.vue'
 import SvgIcon from './SvgIcon.vue'
-import { workflowRun, workflowRuntimeResume, getUploadAction,workflowApi } from '#/api/aiflow'
+import { workflowRun, workflowRuntimeResume, workflowApi } from '#/api/aiflow'
 import { useWfStore } from '#/packages/workflow-designer/store'
 
 interface Props {

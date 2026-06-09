@@ -21,6 +21,8 @@ export interface CrmCustomer extends BaseEntity {
 export interface CrmContact extends BaseEntity {
   contactId: number;
   customerId: number;
+  customerCode?: string;
+  customerName?: string;
   name: string;
   phone?: string;
   email?: string;
@@ -34,7 +36,10 @@ export interface CrmContact extends BaseEntity {
 export interface CrmOpportunity extends BaseEntity {
   opportunityId: number;
   customerId: number;
+  customerCode?: string;
+  customerName?: string;
   contactId?: number;
+  contactName?: string;
   name: string;
   estimatedAmount?: number;
   estimatedCloseDate?: string;
@@ -47,8 +52,12 @@ export interface CrmOpportunity extends BaseEntity {
 export interface CrmFollowRecord extends BaseEntity {
   followId: number;
   opportunityId?: number;
+  opportunityName?: string;
   customerId: number;
+  customerCode?: string;
+  customerName?: string;
   contactId?: number;
+  contactName?: string;
   followTime: string;
   followMethod?: string;
   content: string;
@@ -59,8 +68,12 @@ export interface CrmFollowRecord extends BaseEntity {
 
 export interface CrmQuote extends BaseEntity {
   quoteId: number;
+  quoteName?: string;
   opportunityId?: number;
+  opportunityName?: string;
   customerId: number;
+  customerCode?: string;
+  customerName?: string;
   version?: number;
   totalAmount?: number;
   status?: string;
@@ -70,8 +83,12 @@ export interface CrmQuote extends BaseEntity {
 export interface CrmContract extends BaseEntity {
   contractId: number;
   opportunityId?: number;
+  opportunityName?: string;
   customerId: number;
+  customerCode?: string;
+  customerName?: string;
   quoteId?: number;
+  quoteName?: string;
   name: string;
   amount?: number;
   signedDate?: string;
@@ -83,8 +100,12 @@ export interface CrmContract extends BaseEntity {
 export interface CrmPaymentPlan extends BaseEntity {
   paymentId: number;
   contractId?: number;
+  contractName?: string;
   opportunityId?: number;
+  opportunityName?: string;
   customerId: number;
+  customerCode?: string;
+  customerName?: string;
   stageName: string;
   amount?: number;
   plannedDate?: string;

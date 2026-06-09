@@ -1,7 +1,7 @@
 
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { Form, Input, Switch, message } from 'ant-design-vue';
 import { useVbenModal } from '@vben/common-ui';
 
@@ -54,6 +54,10 @@ const [BasicModal, modalApi] = useVbenModal({
   },
 });
 
+type NodePayload = Omit<typeof defaultValues, 'uuid'> & { uuid?: string };
+
+const addNode = workflowApi.addNode as (data: NodePayload) => Promise<any>;
+
 async function handleConfirm() {
   try {
     modalApi.modalLoading(true);
@@ -61,7 +65,7 @@ async function handleConfirm() {
     let result;
     if (isEdit.value) {
       // 编辑模式：更新基本信息
-      result = await workflowApi.addNode({
+      result = await addNode({
         uuid: formData.value.uuid,
         name: formData.value.name.trim(),
         title: formData.value.title.trim(),
@@ -70,7 +74,7 @@ async function handleConfirm() {
       });
     } else {
       // 新建模式：创建新工作流
-      result = await workflowApi.addNode({
+      result = await addNode({
         name: formData.value.name.trim(),
         title: formData.value.title.trim(),
         remark: formData.value.remark.trim(),

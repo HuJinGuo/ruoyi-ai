@@ -2,7 +2,7 @@
 import type { Ref } from 'vue';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
-import type { GenInfo } from '#/api/tool/gen/model';
+import type { Column, GenInfo } from '#/api/tool/gen/model';
 
 import { inject, onMounted, reactive } from 'vue';
 
@@ -10,6 +10,14 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { dictOptionSelectList } from '#/api/system/dict/dict-type';
 
 import { validRules, vxeTableColumns } from './gen-data';
+
+type GenConfigGridOptions = {
+  gridOptions: VxeGridProps<Column>;
+};
+
+type GenConfigGridFactory = (
+  options: GenConfigGridOptions,
+) => ReturnType<typeof useVbenVxeGrid<Column>>;
 
 /**
  * 从父组件注入
@@ -34,7 +42,7 @@ onMounted(async () => {
   dictOptions.push(...options);
 });
 
-const gridOptions: VxeGridProps = {
+const gridOptions: VxeGridProps<Column> = {
   columns: vxeTableColumns(dictOptions),
   keepSource: true,
   editConfig: { trigger: 'click', mode: 'cell', showStatus: true },
@@ -59,7 +67,8 @@ const gridOptions: VxeGridProps = {
   data: genInfoData.value.columns,
 };
 
-const [BasicTable, tableApi] = useVbenVxeGrid({ gridOptions });
+const createGenConfigGrid = useVbenVxeGrid as GenConfigGridFactory;
+const [BasicTable, tableApi] = createGenConfigGrid({ gridOptions });
 
 /**
  * 校验表格数据

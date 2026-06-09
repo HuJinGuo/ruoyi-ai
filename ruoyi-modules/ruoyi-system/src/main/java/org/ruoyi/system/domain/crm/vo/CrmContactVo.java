@@ -29,6 +29,12 @@ public class CrmContactVo implements Serializable {
     @ExcelProperty(value = "客户ID")
     private Long customerId;
 
+    @ExcelProperty(value = "客户编码")
+    private String customerCode;
+
+    @ExcelProperty(value = "客户名称")
+    private String customerName;
+
     @ExcelProperty(value = "联系人姓名")
     private String name;
 

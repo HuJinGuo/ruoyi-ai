@@ -11,13 +11,20 @@ import { getVxePopupContainer } from '@vben/utils';
 
 import { Button, Modal, Popconfirm, Space } from 'ant-design-vue';
 
-import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { workflowApi } from '#/api/aiflow';
 
 import { columns, querySchema } from './data';
 import WorkflowModal from './workflow-modal.vue';
 
 const router = useRouter();
+
+type WorkflowGridFactory = (options: {
+  formOptions: VbenFormProps;
+  gridOptions: VxeGridProps<WorkflowInfo>;
+}) => ReturnType<typeof useVbenVxeGrid<WorkflowInfo>>;
+
+const createWorkflowGrid = useVbenVxeGrid as WorkflowGridFactory;
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -63,7 +70,7 @@ const gridOptions: VxeGridProps = {
   id: 'workflow-index',
 };
 
-const [BasicTable, tableApi] = useVbenVxeGrid({
+const [BasicTable, tableApi] = createWorkflowGrid({
   formOptions,
   gridOptions,
 });
@@ -71,6 +78,10 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
 const [WorkflowModalComponent, workflowModalApi] = useVbenModal({
   connectedComponent: WorkflowModal,
 });
+
+function workflowCheckboxChecked() {
+  return tableApi.grid.getCheckboxRecords().length > 0;
+}
 
 // 新建工作流
 function handleAdd() {
@@ -158,7 +169,7 @@ function handleMultiDelete() {
       <template #toolbar-tools>
         <Space>
           <Button
-            :disabled="!vxeCheckboxChecked(tableApi)"
+            :disabled="!workflowCheckboxChecked()"
             danger
             type="primary"
             @click="handleMultiDelete"

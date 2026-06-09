@@ -1,5 +1,6 @@
 package org.ruoyi.system.domain.material;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -30,6 +31,12 @@ public class MaterialPart extends TenantEntity {
     private String category;
 
     private Long defaultSupplierId;
+
+    @TableField(exist = false)
+    private String defaultSupplierCode;
+
+    @TableField(exist = false)
+    private String defaultSupplierName;
 
     private String status;
 

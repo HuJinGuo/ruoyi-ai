@@ -279,6 +279,16 @@ defineExpose({
   width: 100%;
 }
 
+.chat-sender :deep(.el-sender) {
+  border-color: #dfe5ee;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.chat-sender :deep(.el-sender__textarea) {
+  min-height: 72px;
+}
+
 // 关键：让 prefix 区域扩展占满整行
 :deep(.el-sender-prefix) {
   flex: 1;
@@ -309,28 +319,28 @@ defineExpose({
   display: flex;
   gap: 4px;
   align-items: center;
-  padding: 10px;
+  padding: 8px 10px;
   cursor: pointer;
   user-select: none;
-  background-color: #fff;
-  border: 1px solid rgb(0 0 0 / 10%);
-  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1px solid #dfe5ee;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
-  color: rgb(0 0 0 / 85%);
+  color: #334155;
   transition: all 0.2s ease;
   white-space: nowrap;
 
   &:hover {
-    background-color: rgb(0 0 0 / 4%);
-    border-color: rgb(0 0 0 / 15%);
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
   }
 
   // 选中状态
   &.active {
-    background: var(--el-color-primary-light-9, rgb(235.9 245.3 255));
-    border-color: var(--el-color-primary, #409eff);
-    color: var(--el-color-primary, #409eff);
+    background: #eff6ff;
+    border-color: #60a5fa;
+    color: #1d4ed8;
     font-weight: 600;
   }
 

@@ -1,6 +1,6 @@
 import type { MenuPermissionOption } from './data';
 
-import type { useVbenVxeGrid } from '#/adapter/vxe-table';
+import type { VbenVxeGridApi } from '#/adapter/vxe-table';
 import type { MenuOption } from '#/api/system/menu/model';
 
 import { eachTree, treeToList } from '@vben/utils';
@@ -87,7 +87,7 @@ export function menusWithPermissions(menus: MenuOption[]) {
 export function setTableChecked(
   checkedKeys: (number | string)[],
   menus: MenuPermissionOption[],
-  tableApi: ReturnType<typeof useVbenVxeGrid>['1'],
+  tableApi: VbenVxeGridApi<MenuPermissionOption>,
   association: boolean,
 ) {
   // tree转list

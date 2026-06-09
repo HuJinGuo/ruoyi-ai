@@ -30,8 +30,17 @@ public class CrmQuoteVo implements Serializable {
     @ExcelProperty(value = "商机ID")
     private Long opportunityId;
 
+    @ExcelProperty(value = "商机名称")
+    private String opportunityName;
+
     @ExcelProperty(value = "客户ID")
     private Long customerId;
+
+    @ExcelProperty(value = "客户编码")
+    private String customerCode;
+
+    @ExcelProperty(value = "客户名称")
+    private String customerName;
 
     @ExcelProperty(value = "版本")
     private Integer version;

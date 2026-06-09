@@ -19,7 +19,7 @@ export interface ModelVO {
   /**
    * 模型供应商
    */
-  providerCode: number | string;
+  providerCode: string;
 
   /**
    * 模型描述
@@ -71,7 +71,7 @@ export interface ModelForm extends BaseEntity {
   /**
    * 模型供应商
    */
-  providerCode?: number | string;
+  providerCode?: string;
 
   /**
    * 模型描述
@@ -118,7 +118,7 @@ export interface ModelQuery extends PageQuery {
   /**
    * 模型供应商
    */
-  providerCode?: number | string;
+  providerCode?: string;
 
   /**
    * 模型描述

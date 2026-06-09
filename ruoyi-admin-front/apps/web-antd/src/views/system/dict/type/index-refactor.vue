@@ -1,7 +1,9 @@
 <!-- 使用vxe实现成本最小 且自带虚拟滚动  -->
 <script setup lang="ts">
-import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { VxeGridListeners, VxeGridProps } from '#/adapter/vxe-table';
 import type { DictType } from '#/api/system/dict/dict-type-model';
+
+type GridEvents = Partial<VxeGridListeners>;
 
 import { h, ref, shallowRef, watch } from 'vue';
 
@@ -85,7 +87,7 @@ const gridOptions: VxeGridProps = {
 const [BasicTable, tableApi] = useVbenVxeGrid({
   gridOptions,
   gridEvents: {
-    cellClick: ({ row }) => {
+    cellClick: ({ row }: Parameters<NonNullable<GridEvents['cellClick']>>[0]) => {
       handleRowClick(row);
     },
   },

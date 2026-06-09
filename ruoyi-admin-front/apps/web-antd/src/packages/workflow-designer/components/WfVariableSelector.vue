@@ -5,6 +5,7 @@ import type { VNodeChild } from 'vue'
 import { emptyWorkflowInfo } from '../utils/workflow-util'
 import { getIconByComponentName, getIconClassByComponentName } from '../utils/workflow-util'
 import SvgIcon from './SvgIcon.vue'
+import type { SelectValue } from 'ant-design-vue/es/select'
 import type { WorkflowInfo, WorkflowNode } from '../types/index.d'
 
 interface Props {
@@ -78,7 +79,6 @@ function rebuildSelectedVars() {
 rebuildSelectedVars()
 
 function two(n: number) { return String(n).padStart(2, '0') }
-function defaultKeyAt(idx: number) { return `var_${two(idx + 1)}` }
 function nextAutoKey(list: string[]) {
   const nums = list
     .map((k) => (k && /^var_(\d+)$/.test(k) ? Number((k.match(/^var_(\d+)$/) as RegExpMatchArray)[1]) : 0))
@@ -97,9 +97,10 @@ function toRefDef(val: string): { node_uuid: string; node_param_name: string } {
   return { node_uuid: vs[0] || '', node_param_name: vs[1] || '' }
 }
 
-function handleSelectAt(index: number, value: string) {
+function handleSelectAt(index: number, value: SelectValue) {
+  const stringValue = typeof value === 'string' ? value : ''
   const arr = selectedVars.value.slice()
-  arr[index] = value
+  arr[index] = stringValue
   selectedVars.value = arr
   // 写回节点
   const payload = selectedVars.value.map(toRefDef)
@@ -140,10 +141,10 @@ function removeVariable(index: number) {
             :value="sv"
             :show-arrow="true"
             :options="options"
-            @update:value="(val: string) => handleSelectAt(idx, val)"
+            @update:value="(val: SelectValue) => handleSelectAt(idx, val)"
             class="flex-1"
           >
-            <template #optionRender="{ option }">
+            <template #option="option">
               <component :is="() => renderDropdownLabel(option)" />
             </template>
           </Select>

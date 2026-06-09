@@ -3,7 +3,9 @@ import type { VbenFormProps } from '@vben/common-ui';
 
 import type { LeaveForm } from './api/model';
 
-import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { VxeGridListeners, VxeGridProps } from '#/adapter/vxe-table';
+
+type GridEvents = Partial<VxeGridListeners>;
 
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { getVxePopupContainer } from '@vben/utils';
@@ -72,7 +74,7 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
   formOptions,
   gridOptions,
   gridEvents: {
-    cellClick: ({ row, column }) => {
+    cellClick: ({ row, column }: Parameters<NonNullable<GridEvents['cellClick']>>[0]) => {
       // 草稿状态 不做处理
       // 操作列 不做处理
       if (row.status === 'draft' || column.field === 'action') {

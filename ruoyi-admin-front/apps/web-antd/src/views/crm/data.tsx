@@ -91,11 +91,17 @@ export async function loadCrmLookups(): Promise<CrmLookups> {
     customers: toOptions(customers, 'customerId', (item) =>
       [item.code, item.name].filter(Boolean).join(' / '),
     ),
-    opportunities: toOptions(opportunities, 'opportunityId', (item) => item.name),
-    quotes: toOptions(
-      quotes,
-      'quoteId',
-      (item) => `报价 #${item.quoteId}${item.version ? ` / V${item.version}` : ''}`,
+    opportunities: toOptions(
+      opportunities,
+      'opportunityId',
+      (item) => item.name,
+    ),
+    quotes: toOptions(quotes, 'quoteId', (item) =>
+      displayTextOr(
+        item,
+        ['opportunityName', 'customerCode', 'customerName'],
+        '报价单',
+      ),
     ),
   };
 }
@@ -185,6 +191,37 @@ function actionColumn(width = 160) {
   };
 }
 
+function displayText(row: Record<string, any>, fields: string[]) {
+  return fields
+    .map((field) => row[field])
+    .filter(Boolean)
+    .join(' / ');
+}
+
+function displayTextOr(
+  row: Record<string, any>,
+  fields: string[],
+  fallback: string,
+) {
+  return displayText(row, fields) || fallback;
+}
+
+function displayColumn(
+  field: string,
+  title: string,
+  fields: string[],
+  width = 150,
+) {
+  return {
+    field,
+    slots: {
+      default: ({ row }: any) => displayText(row, fields) || '-',
+    },
+    title,
+    width,
+  };
+}
+
 export const crmCustomerConfig: CrmPageConfig = {
   api: crmCustomerApi,
   columns: [
@@ -203,7 +240,8 @@ export const crmCustomerConfig: CrmPageConfig = {
     {
       field: 'level',
       slots: {
-        default: ({ row }) => renderDict(row.level, DictEnum.CRM_CUSTOMER_LEVEL),
+        default: ({ row }) =>
+          renderDict(row.level, DictEnum.CRM_CUSTOMER_LEVEL),
       },
       title: '等级',
       width: 90,
@@ -223,8 +261,18 @@ export const crmCustomerConfig: CrmPageConfig = {
   ],
   drawerSchema: () => [
     hiddenId('customerId'),
-    { component: 'Input', fieldName: 'name', label: '客户名称', rules: 'required' },
-    { component: 'Input', fieldName: 'code', label: '客户编码', rules: 'required' },
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: '客户名称',
+      rules: 'required',
+    },
+    {
+      component: 'Input',
+      fieldName: 'code',
+      label: '客户编码',
+      rules: 'required',
+    },
     { component: 'Input', fieldName: 'shortName', label: '客户简称' },
     {
       component: 'Select',
@@ -252,9 +300,24 @@ export const crmCustomerConfig: CrmPageConfig = {
     { component: 'Input', fieldName: 'city', label: '市' },
     { component: 'Input', fieldName: 'district', label: '区' },
     { component: 'Input', fieldName: 'website', label: '官网' },
-    { component: 'Textarea', fieldName: 'address', formItemClass: 'col-span-2 items-start', label: '详细地址' },
-    { component: 'Textarea', fieldName: 'scale', formItemClass: 'col-span-2 items-start', label: '规模信息' },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'Textarea',
+      fieldName: 'address',
+      formItemClass: 'col-span-2 items-start',
+      label: '详细地址',
+    },
+    {
+      component: 'Textarea',
+      fieldName: 'scale',
+      formItemClass: 'col-span-2 items-start',
+      label: '规模信息',
+    },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM客户',
   permission: 'crm:customer',
@@ -278,7 +341,7 @@ export const crmContactConfig: CrmPageConfig = {
   columns: [
     { type: 'checkbox', width: 60 },
     { field: 'name', title: '联系人', width: 140 },
-    { field: 'customerId', title: '客户ID', width: 120 },
+    displayColumn('customerId', '客户', ['customerCode', 'customerName'], 180),
     { field: 'phone', title: '手机', width: 140 },
     { field: 'email', title: '邮箱', minWidth: 180 },
     { field: 'position', title: '职位', width: 130 },
@@ -298,7 +361,12 @@ export const crmContactConfig: CrmPageConfig = {
   drawerSchema: (lookups) => [
     hiddenId('contactId'),
     customerSelect(lookups, 'selectRequired'),
-    { component: 'Input', fieldName: 'name', label: '联系人', rules: 'required' },
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: '联系人',
+      rules: 'required',
+    },
     { component: 'Input', fieldName: 'phone', label: '手机' },
     { component: 'Input', fieldName: 'email', label: '邮箱' },
     { component: 'Input', fieldName: 'wechat', label: '微信' },
@@ -310,7 +378,12 @@ export const crmContactConfig: CrmPageConfig = {
       fieldName: 'decisionRole',
       label: '决策角色',
     },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM联系人',
   permission: 'crm:contact',
@@ -334,7 +407,8 @@ export const crmOpportunityConfig: CrmPageConfig = {
   columns: [
     { type: 'checkbox', width: 60 },
     { field: 'name', title: '商机名称', minWidth: 180 },
-    { field: 'customerId', title: '客户ID', width: 120 },
+    displayColumn('customerId', '客户', ['customerCode', 'customerName'], 180),
+    displayColumn('contactId', '联系人', ['contactName'], 120),
     { field: 'estimatedAmount', title: '预计金额', width: 120 },
     { field: 'estimatedCloseDate', title: '预计签单', width: 120 },
     {
@@ -363,8 +437,18 @@ export const crmOpportunityConfig: CrmPageConfig = {
     hiddenId('opportunityId'),
     customerSelect(lookups, 'selectRequired'),
     contactSelect(lookups),
-    { component: 'Input', fieldName: 'name', label: '商机名称', rules: 'required' },
-    { component: 'InputNumber', componentProps: { min: 0 }, fieldName: 'estimatedAmount', label: '预计金额' },
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: '商机名称',
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 0 },
+      fieldName: 'estimatedAmount',
+      label: '预计金额',
+    },
     {
       component: 'DatePicker',
       componentProps: { getPopupContainer, valueFormat: 'YYYY-MM-DD' },
@@ -384,8 +468,18 @@ export const crmOpportunityConfig: CrmPageConfig = {
       label: '销售阶段',
       rules: 'selectRequired',
     },
-    { component: 'InputNumber', componentProps: { max: 100, min: 0 }, fieldName: 'successRate', label: '成功率' },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'InputNumber',
+      componentProps: { max: 100, min: 0 },
+      fieldName: 'successRate',
+      label: '成功率',
+    },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM商机',
   permission: 'crm:opportunity',
@@ -408,8 +502,8 @@ export const crmFollowRecordConfig: CrmPageConfig = {
   columns: [
     { type: 'checkbox', width: 60 },
     { field: 'followTime', title: '跟进时间', width: 170 },
-    { field: 'customerId', title: '客户ID', width: 120 },
-    { field: 'opportunityId', title: '商机ID', width: 120 },
+    displayColumn('customerId', '客户', ['customerCode', 'customerName'], 180),
+    displayColumn('opportunityId', '商机', ['opportunityName'], 160),
     {
       field: 'followMethod',
       slots: {
@@ -423,7 +517,8 @@ export const crmFollowRecordConfig: CrmPageConfig = {
     {
       field: 'result',
       slots: {
-        default: ({ row }) => renderDict(row.result, DictEnum.CRM_FOLLOW_RESULT),
+        default: ({ row }) =>
+          renderDict(row.result, DictEnum.CRM_FOLLOW_RESULT),
       },
       title: '结果',
       width: 120,
@@ -469,8 +564,19 @@ export const crmFollowRecordConfig: CrmPageConfig = {
       fieldName: 'nextFollowTime',
       label: '下次跟进',
     },
-    { component: 'Textarea', fieldName: 'content', formItemClass: 'col-span-2 items-start', label: '跟进内容', rules: 'required' },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'Textarea',
+      fieldName: 'content',
+      formItemClass: 'col-span-2 items-start',
+      label: '跟进内容',
+      rules: 'required',
+    },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM跟进记录',
   permission: 'crm:followRecord',
@@ -493,9 +599,14 @@ export const crmQuoteConfig: CrmPageConfig = {
   api: crmQuoteApi,
   columns: [
     { type: 'checkbox', width: 60 },
-    { field: 'quoteId', title: '报价ID', width: 120 },
-    { field: 'customerId', title: '客户ID', width: 120 },
-    { field: 'opportunityId', title: '商机ID', width: 120 },
+    displayColumn(
+      'quoteId',
+      '报价',
+      ['opportunityName', 'customerCode', 'customerName'],
+      180,
+    ),
+    displayColumn('customerId', '客户', ['customerCode', 'customerName'], 180),
+    displayColumn('opportunityId', '商机', ['opportunityName'], 160),
     { field: 'version', title: '版本', width: 80 },
     { field: 'totalAmount', title: '总金额', width: 120 },
     {
@@ -513,8 +624,19 @@ export const crmQuoteConfig: CrmPageConfig = {
     hiddenId('quoteId'),
     customerSelect(lookups, 'selectRequired'),
     opportunitySelect(lookups),
-    { component: 'InputNumber', componentProps: { min: 1 }, defaultValue: 1, fieldName: 'version', label: '版本' },
-    { component: 'InputNumber', componentProps: { min: 0 }, fieldName: 'totalAmount', label: '总金额' },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 1 },
+      defaultValue: 1,
+      fieldName: 'version',
+      label: '版本',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 0 },
+      fieldName: 'totalAmount',
+      label: '总金额',
+    },
     {
       component: 'Select',
       componentProps: dictProps(DictEnum.CRM_QUOTE_STATUS),
@@ -522,7 +644,12 @@ export const crmQuoteConfig: CrmPageConfig = {
       fieldName: 'status',
       label: '报价状态',
     },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM报价',
   permission: 'crm:quote',
@@ -545,7 +672,7 @@ export const crmContractConfig: CrmPageConfig = {
   columns: [
     { type: 'checkbox', width: 60 },
     { field: 'name', title: '合同名称', minWidth: 180 },
-    { field: 'customerId', title: '客户ID', width: 120 },
+    displayColumn('customerId', '客户', ['customerCode', 'customerName'], 180),
     { field: 'amount', title: '合同金额', width: 120 },
     { field: 'signedDate', title: '签订日期', width: 120 },
     { field: 'deliveryDate', title: '交付日期', width: 120 },
@@ -566,8 +693,18 @@ export const crmContractConfig: CrmPageConfig = {
     customerSelect(lookups, 'selectRequired'),
     opportunitySelect(lookups),
     quoteSelect(lookups),
-    { component: 'Input', fieldName: 'name', label: '合同名称', rules: 'required' },
-    { component: 'InputNumber', componentProps: { min: 0 }, fieldName: 'amount', label: '合同金额' },
+    {
+      component: 'Input',
+      fieldName: 'name',
+      label: '合同名称',
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 0 },
+      fieldName: 'amount',
+      label: '合同金额',
+    },
     {
       component: 'DatePicker',
       componentProps: { getPopupContainer, valueFormat: 'YYYY-MM-DD' },
@@ -587,7 +724,12 @@ export const crmContractConfig: CrmPageConfig = {
       fieldName: 'status',
       label: '合同状态',
     },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM合同',
   permission: 'crm:contract',
@@ -610,14 +752,15 @@ export const crmPaymentPlanConfig: CrmPageConfig = {
   columns: [
     { type: 'checkbox', width: 60 },
     { field: 'stageName', title: '付款节点', minWidth: 160 },
-    { field: 'customerId', title: '客户ID', width: 120 },
-    { field: 'contractId', title: '合同ID', width: 120 },
+    displayColumn('customerId', '客户', ['customerCode', 'customerName'], 180),
+    displayColumn('contractId', '合同', ['contractName'], 180),
     { field: 'amount', title: '金额', width: 120 },
     { field: 'plannedDate', title: '计划收款', width: 120 },
     {
       field: 'status',
       slots: {
-        default: ({ row }) => renderDict(row.status, DictEnum.CRM_PAYMENT_STATUS),
+        default: ({ row }) =>
+          renderDict(row.status, DictEnum.CRM_PAYMENT_STATUS),
       },
       title: '状态',
       width: 120,
@@ -630,8 +773,18 @@ export const crmPaymentPlanConfig: CrmPageConfig = {
     customerSelect(lookups, 'selectRequired'),
     contractSelect(lookups),
     opportunitySelect(lookups),
-    { component: 'Input', fieldName: 'stageName', label: '付款节点', rules: 'required' },
-    { component: 'InputNumber', componentProps: { min: 0 }, fieldName: 'amount', label: '金额' },
+    {
+      component: 'Input',
+      fieldName: 'stageName',
+      label: '付款节点',
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 0 },
+      fieldName: 'amount',
+      label: '金额',
+    },
     {
       component: 'DatePicker',
       componentProps: { getPopupContainer, valueFormat: 'YYYY-MM-DD' },
@@ -645,7 +798,12 @@ export const crmPaymentPlanConfig: CrmPageConfig = {
       fieldName: 'status',
       label: '回款状态',
     },
-    { component: 'Textarea', fieldName: 'remark', formItemClass: 'col-span-2 items-start', label: '备注' },
+    {
+      component: 'Textarea',
+      fieldName: 'remark',
+      formItemClass: 'col-span-2 items-start',
+      label: '备注',
+    },
   ],
   exportName: 'CRM回款计划',
   permission: 'crm:paymentPlan',

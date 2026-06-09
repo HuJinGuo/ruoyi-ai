@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Recordable } from '@vben/types';
 
+import type { Component } from 'vue';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
 import { Popconfirm } from 'ant-design-vue';
@@ -8,6 +10,15 @@ import { Popconfirm } from 'ant-design-vue';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { forceLogout2, onlineDeviceList } from '#/api/monitor/online';
 import { columns } from '#/views/monitor/online/data';
+
+type OnlineDeviceGridFactory = (options: { gridOptions: VxeGridProps }) => readonly [
+  Component,
+  {
+    query: () => Promise<void>;
+  },
+];
+
+const createOnlineDeviceGrid = useVbenVxeGrid as unknown as OnlineDeviceGridFactory;
 
 const onlineDeviceColumns: VxeGridProps['columns'] = [
   {
@@ -41,7 +52,7 @@ const gridOptions: VxeGridProps = {
   },
 };
 
-const [BasicTable, tableApi] = useVbenVxeGrid({ gridOptions });
+const [BasicTable, tableApi] = createOnlineDeviceGrid({ gridOptions });
 
 async function handleForceOffline(row: Recordable<any>) {
   await forceLogout2(row.tokenId);

@@ -1,5 +1,8 @@
 package org.ruoyi.common.sse.utils;
 
+import cn.hutool.json.JSONUtil;
+
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import lombok.AccessLevel;
@@ -9,6 +12,7 @@ import org.ruoyi.common.core.utils.SpringUtils;
 import org.ruoyi.common.sse.core.SseEmitterManager;
 import org.ruoyi.common.sse.dto.SseEventDto;
 import org.ruoyi.common.sse.dto.SseMessageDto;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * SSE工具类
@@ -155,6 +159,41 @@ public class SseMessageUtils {
      */
     public static void sendAgentEvent(Long userId, String event, Map<String, Object> payload) {
         sendEvent(userId, SseEventDto.agentEvent(event, payload));
+    }
+
+    /**
+     * 向当前请求的 SSE emitter 直接发送结构化事件。
+     */
+    public static void sendEvent(SseEmitter emitter, SseEventDto eventDto) {
+        if (emitter == null || eventDto == null) {
+            return;
+        }
+        try {
+            emitter.send(SseEmitter.event()
+                .name(eventDto.getEvent())
+                .data(JSONUtil.toJsonStr(eventDto)));
+        } catch (IOException e) {
+            log.warn("【SSE直接发送失败】event={}, error={}", eventDto.getEvent(), e.getMessage());
+        }
+    }
+
+    /**
+     * 向当前请求的 SSE emitter 直接发送 Agent 执行上下文事件。
+     */
+    public static void sendAgentEvent(SseEmitter emitter, String event, Map<String, Object> payload) {
+        sendEvent(emitter, SseEventDto.agentEvent(event, payload));
+    }
+
+    public static void sendContent(SseEmitter emitter, String content) {
+        sendEvent(emitter, SseEventDto.content(content));
+    }
+
+    public static void sendDone(SseEmitter emitter) {
+        sendEvent(emitter, SseEventDto.done());
+    }
+
+    public static void sendError(SseEmitter emitter, String error) {
+        sendEvent(emitter, SseEventDto.error(error));
     }
 
     /**

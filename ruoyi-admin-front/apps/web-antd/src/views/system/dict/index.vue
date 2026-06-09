@@ -3,7 +3,7 @@ import { onUnmounted } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import DictDataPanel from './data/index.vue';
+import DictDataPanel from './data.vue';
 import { emitter } from './mitt';
 import DictTypePanel from './type/index.vue';
 

@@ -15,6 +15,8 @@ import type { VxeGridApi } from './api';
 
 import { useVbenForm } from '@vben-core/form-ui';
 
+type VueClassType = ClassType | false | null | undefined;
+
 export interface VxePaginationInfo {
   currentPage: number;
   pageSize: number;
@@ -51,11 +53,11 @@ export interface VxeGridProps<
   /**
    * 组件class
    */
-  class?: ClassType;
+  class?: VueClassType;
   /**
    * vxe-grid class
    */
-  gridClass?: ClassType;
+  gridClass?: VueClassType;
   /**
    * vxe-grid 配置
    */

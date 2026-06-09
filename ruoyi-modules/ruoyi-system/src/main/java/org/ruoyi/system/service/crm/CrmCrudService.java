@@ -30,15 +30,20 @@ public abstract class CrmCrudService<T extends TenantEntity, V, B extends BaseEn
 
     public TableDataInfo<V> selectPageList(B bo, PageQuery pageQuery) {
         Page<V> page = baseMapper.selectVoPage(pageQuery.build(), buildQueryWrapper(bo));
+        fillDisplayFields(page.getRecords());
         return TableDataInfo.build(page);
     }
 
     public List<V> selectList(B bo) {
-        return baseMapper.selectVoList(buildQueryWrapper(bo));
+        List<V> list = baseMapper.selectVoList(buildQueryWrapper(bo));
+        fillDisplayFields(list);
+        return list;
     }
 
     public V selectById(Serializable id) {
-        return baseMapper.selectVoById(id);
+        V vo = baseMapper.selectVoById(id);
+        fillDisplayFields(vo == null ? List.of() : List.of(vo));
+        return vo;
     }
 
     public boolean insert(B bo) {
@@ -58,4 +63,8 @@ public abstract class CrmCrudService<T extends TenantEntity, V, B extends BaseEn
     protected abstract Wrapper<T> buildQueryWrapper(B bo);
 
     protected abstract Class<T> getEntityClass();
+
+    protected void fillDisplayFields(List<V> records) {
+        // 子类按业务显式补齐列表展示字段。
+    }
 }

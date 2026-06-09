@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -114,7 +115,7 @@ public class StreamingOutputWrapper implements StreamingChatModel, ChatModel {
 
             @Override
             public void onError(Throwable error) {
-                channel.send("\n[错误] " + error.getMessage());
+                channel.send("\n[错误] " + resolveStreamingErrorMessage(error));
                 channel.completeWithError(error);
                 future.completeExceptionally(error);
                 log.error("【StreamingOutputWrapper】流式处理出错", error);
@@ -122,10 +123,19 @@ public class StreamingOutputWrapper implements StreamingChatModel, ChatModel {
         });
 
         // 等待流式完成
-        future.join();
+        try {
+            future.join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            throw new IllegalStateException(resolveStreamingErrorMessage(cause), cause);
+        }
 
         // 返回收集的响应
-        return responseRef.get();
+        ChatResponse response = responseRef.get();
+        if (response == null) {
+            throw new IllegalStateException("模型流式响应提前结束，未收到完整响应对象");
+        }
+        return response;
     }
 
     // ==================== StreamingChatModel 接口实现（流式调用） ====================
@@ -187,11 +197,25 @@ public class StreamingOutputWrapper implements StreamingChatModel, ChatModel {
 
             @Override
             public void onError(Throwable error) {
-                channel.send("\n[错误] " + error.getMessage());
+                channel.send("\n[错误] " + resolveStreamingErrorMessage(error));
                 channel.completeWithError(error);
                 original.onError(error);
             }
         };
+    }
+
+    private String resolveStreamingErrorMessage(Throwable error) {
+        String message = error == null ? null : error.getMessage();
+        if (message != null) {
+            String lower = message.toLowerCase();
+            if (lower.contains("upstream stream ended without a terminal response event")
+                || lower.contains("upstream request failed")
+                || lower.contains("upstream_error")) {
+                return "模型上游流式响应提前中断，未收到完整结束事件，请稍后重试或切换模型。";
+            }
+            return message;
+        }
+        return "模型流式响应异常中断";
     }
 
     // ==================== 共用接口方法 ====================

@@ -208,7 +208,11 @@ function createRequestClient(baseURL: string) {
          * 我建议你改后端而不是前端来做兼容
          */
         // json数据的判断
-        if (response.headers['content-type']?.includes?.('application/json')) {
+        const contentType = response.headers['content-type'];
+        if (
+          typeof contentType === 'string' &&
+          contentType.includes('application/json')
+        ) {
           /**
            * 需要判断是否登录超时/401
            * 执行登出操作

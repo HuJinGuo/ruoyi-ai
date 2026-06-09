@@ -1,5 +1,6 @@
 package org.ruoyi.system.domain.srm;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -20,11 +21,26 @@ public class SrmPurchaseOrderItem extends TenantEntity {
 
     private Long purchaseOrderId;
 
+    @TableField(exist = false)
+    private String purchaseOrderCode;
+
     private Long purchaseRequestId;
+
+    @TableField(exist = false)
+    private String purchaseRequestName;
 
     private Long workOrderId;
 
+    @TableField(exist = false)
+    private String workOrderCode;
+
+    @TableField(exist = false)
+    private String projectName;
+
     private Long contractId;
+
+    @TableField(exist = false)
+    private String contractName;
 
     private Long partId;
 

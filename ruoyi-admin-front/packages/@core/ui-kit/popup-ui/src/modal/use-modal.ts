@@ -104,16 +104,15 @@ export function useVbenModal<TParentModalProps extends ModalProps = ModalProps>(
 
   const Modal = defineComponent(
     (props: ModalProps, { attrs, slots }) => {
-      return () =>
-        h(
-          VbenModal,
-          {
-            ...props,
-            ...attrs,
-            modalApi: extendedApi,
-          },
-          slots,
-        );
+      return () => {
+        const modalProps = {
+          ...props,
+          ...attrs,
+          modalApi: extendedApi,
+        } as Partial<InstanceType<typeof VbenModal>['$props']>;
+
+        return h(VbenModal, modalProps, slots);
+      };
     },
     // eslint-disable-next-line vue/one-component-per-file
     {

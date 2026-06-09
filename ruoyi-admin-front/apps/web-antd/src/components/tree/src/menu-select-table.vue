@@ -114,35 +114,37 @@ function updateCheckedNumber() {
   checkedNum.value = getCheckedKeys().length;
 }
 
-const [BasicTable, tableApi] = useVbenVxeGrid({
-  gridOptions,
-  gridEvents: {
-    // 勾选事件
-    checkboxChange: (params) => {
-      // 选中还是取消选中
-      const checked = params.checked;
-      // 行
-      const record = params.row;
-      if (association.value) {
-        // 节点关联
-        // 设置所有子节点选中状态
-        rowAndChildrenChecked(record, checked);
-      } else {
-        // 节点独立
-        // 点行会勾选/取消全部权限  点权限不会勾选行
-        setPermissionsChecked(record, checked);
-      }
-      updateCheckedNumber();
-    },
-    // 全选事件
-    checkboxAll: (params) => {
-      const records = params.$grid.getData();
-      records.forEach((item) => {
-        rowAndChildrenChecked(item, params.checked);
-      });
-      updateCheckedNumber();
-    },
+const gridEvents = {
+  // 勾选事件
+  checkboxChange: (params: any) => {
+    // 选中还是取消选中
+    const checked = params.checked;
+    // 行
+    const record = params.row;
+    if (association.value) {
+      // 节点关联
+      // 设置所有子节点选中状态
+      rowAndChildrenChecked(record, checked);
+    } else {
+      // 节点独立
+      // 点行会勾选/取消全部权限  点权限不会勾选行
+      setPermissionsChecked(record, checked);
+    }
+    updateCheckedNumber();
   },
+  // 全选事件
+  checkboxAll: (params: any) => {
+    const records = params.$grid.getData();
+    records.forEach((item: MenuPermissionOption) => {
+      rowAndChildrenChecked(item, params.checked);
+    });
+    updateCheckedNumber();
+  },
+};
+
+const [BasicTable, tableApi] = (useVbenVxeGrid as any)({
+  gridOptions,
+  gridEvents,
 });
 
 /**
@@ -238,7 +240,7 @@ const lastCheckedKeys = shallowRef<(number | string)[]>([]);
 async function handleAssociationChange(e: RadioChangeEvent) {
   lastCheckedKeys.value = getCheckedKeys();
   // 清空全部permissions选中
-  const records = tableApi.grid.getData();
+  const records = tableApi.grid.getData() as MenuPermissionOption[];
   records.forEach((item) => {
     rowAndChildrenChecked(item, false);
   });
@@ -329,9 +331,12 @@ function getCheckedKeys() {
   // 节点独立
 
   // 勾选的行
-  const records = tableApi?.grid?.getCheckboxRecords?.(true) ?? [];
+  const records =
+    (tableApi?.grid?.getCheckboxRecords?.(true) as MenuPermissionOption[]) ??
+    [];
   // 全部数据 用于获取permissions
-  const allRecords = tableApi?.grid?.getData?.() ?? [];
+  const allRecords =
+    (tableApi?.grid?.getData?.() as MenuPermissionOption[]) ?? [];
   // 表格已经选中的行ids
   const checkedIds = records.map((item) => item.id);
   // 所有已经勾选权限的ids

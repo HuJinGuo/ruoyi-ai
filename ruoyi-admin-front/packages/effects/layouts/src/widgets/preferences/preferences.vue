@@ -1,11 +1,13 @@
 <script lang="ts" setup>
+import type { DrawerProps } from '@vben-core/popup-ui';
+
 import { Settings } from '@vben/icons';
 import { $t, loadLocaleMessages } from '@vben/locales';
 import { preferences, updatePreferences } from '@vben/preferences';
 import { capitalizeFirstLetter } from '@vben/utils';
 import { useVbenDrawer } from '@vben-core/popup-ui';
 import { VbenButton } from '@vben-core/shadcn-ui';
-import { computed } from 'vue';
+import { computed, useAttrs } from 'vue';
 
 import PreferencesDrawer from './preferences-drawer.vue';
 
@@ -13,11 +15,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: PreferencesDrawer,
 });
 
+const rawAttrs = useAttrs();
+
 /**
  * preferences 转成 vue props
  * preferences.widget.fullscreen=>widgetFullscreen
  */
-const attrs = computed(() => {
+const preferenceAttrs = computed(() => {
   const result: Record<string, any> = {};
   for (const [key, value] of Object.entries(preferences)) {
     for (const [subKey, subValue] of Object.entries(value)) {
@@ -25,6 +29,16 @@ const attrs = computed(() => {
     }
   }
   return result;
+});
+
+const drawerAttrs = computed(() => {
+  const { class: className, ...restAttrs } = rawAttrs;
+
+  return {
+    ...restAttrs,
+    ...preferenceAttrs.value,
+    class: className || undefined,
+  } as DrawerProps & Record<string, any>;
 });
 
 /**
@@ -54,7 +68,7 @@ const listen = computed(() => {
 </script>
 <template>
   <div>
-    <Drawer v-bind="{ ...$attrs, ...attrs }" v-on="listen" />
+    <Drawer v-bind="drawerAttrs" v-on="listen" />
 
     <div @click="() => drawerApi.open()">
       <slot>

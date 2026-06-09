@@ -27,6 +27,11 @@ export interface MessageVO {
   role: string;
 
   /**
+   * 扣除金额
+   */
+  deductCost: number;
+
+  /**
    * 累计 Tokens
    */
   totalTokens: number;
@@ -35,6 +40,11 @@ export interface MessageVO {
    * 模型名称
    */
   modelName: string;
+
+  /**
+   * 计费类型
+   */
+  billingType: string;
 
   /**
    * 备注
@@ -69,6 +79,11 @@ export interface MessageForm extends BaseEntity {
   role?: string;
 
   /**
+   * 扣除金额
+   */
+  deductCost?: number;
+
+  /**
    * 累计 Tokens
    */
   totalTokens?: number;
@@ -77,6 +92,11 @@ export interface MessageForm extends BaseEntity {
    * 模型名称
    */
   modelName?: string;
+
+  /**
+   * 计费类型
+   */
+  billingType?: string;
 
   /**
    * 备注
@@ -106,6 +126,11 @@ export interface MessageQuery extends PageQuery {
   role?: string;
 
   /**
+   * 扣除金额
+   */
+  deductCost?: number;
+
+  /**
    * 累计 Tokens
    */
   totalTokens?: number;
@@ -114,6 +139,11 @@ export interface MessageQuery extends PageQuery {
    * 模型名称
    */
   modelName?: string;
+
+  /**
+   * 计费类型
+   */
+  billingType?: string;
 
   /**
    * 日期范围参数

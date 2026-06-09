@@ -7,6 +7,7 @@ import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import lombok.extern.slf4j.Slf4j;
 import org.ruoyi.common.sse.utils.SseMessageUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,20 +32,30 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
     private final AtomicReference<String> sharedOutputRef = new AtomicReference<>();
     private final Long userId;
     private final String runId;
+    private final SseEmitter emitter;
 
     public MyAgentListener() {
         this.userId = null;
         this.runId = null;
+        this.emitter = null;
     }
 
     public MyAgentListener(Long userId) {
         this.userId = userId;
         this.runId = null;
+        this.emitter = null;
     }
 
     public MyAgentListener(Long userId, String runId) {
         this.userId = userId;
         this.runId = runId;
+        this.emitter = null;
+    }
+
+    public MyAgentListener(Long userId, String runId, SseEmitter emitter) {
+        this.userId = userId;
+        this.runId = runId;
+        this.emitter = emitter;
     }
 
     public String getCapturedResult() {
@@ -165,7 +176,11 @@ public class MyAgentListener implements dev.langchain4j.agentic.observability.Ag
         if (result != null) {
             payload.put("result", result);
         }
-        SseMessageUtils.sendAgentEvent(userId, event, payload);
+        if (emitter != null) {
+            SseMessageUtils.sendAgentEvent(emitter, event, payload);
+        } else {
+            SseMessageUtils.sendAgentEvent(userId, event, payload);
+        }
     }
 
     private String truncate(String value, int maxLength) {

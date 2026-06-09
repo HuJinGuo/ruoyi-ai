@@ -9,22 +9,22 @@ export interface ProviderVO {
   /**
    * 厂商名称
    */
-  providerName: number | string;
+  providerName: string;
 
   /**
    * 厂商编码
    */
-  providerCode: number | string;
+  providerCode: string;
 
   /**
    * 厂商图标
    */
-  providerIcon: number | string;
+  providerIcon: string;
 
   /**
    * 厂商描述
    */
-  providerDesc: number | string;
+  providerDesc: string;
 
   /**
    * API地址
@@ -61,22 +61,22 @@ export interface ProviderForm extends BaseEntity {
   /**
    * 厂商名称
    */
-  providerName?: number | string;
+  providerName?: string;
 
   /**
    * 厂商编码
    */
-  providerCode?: number | string;
+  providerCode?: string;
 
   /**
    * 厂商图标
    */
-  providerIcon?: number | string;
+  providerIcon?: string;
 
   /**
    * 厂商描述
    */
-  providerDesc?: number | string;
+  providerDesc?: string;
 
   /**
    * API地址
@@ -108,22 +108,22 @@ export interface ProviderQuery extends PageQuery {
   /**
    * 厂商名称
    */
-  providerName?: number | string;
+  providerName?: string;
 
   /**
    * 厂商编码
    */
-  providerCode?: number | string;
+  providerCode?: string;
 
   /**
    * 厂商图标
    */
-  providerIcon?: number | string;
+  providerIcon?: string;
 
   /**
    * 厂商描述
    */
-  providerDesc?: number | string;
+  providerDesc?: string;
 
   /**
    * API地址

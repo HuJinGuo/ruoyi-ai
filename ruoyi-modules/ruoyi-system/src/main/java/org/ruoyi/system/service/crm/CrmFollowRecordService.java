@@ -3,13 +3,21 @@ package org.ruoyi.system.service.crm;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.ruoyi.common.core.utils.StringUtils;
+import org.ruoyi.system.domain.crm.CrmContact;
+import org.ruoyi.system.domain.crm.CrmCustomer;
 import org.ruoyi.system.domain.crm.CrmFollowRecord;
+import org.ruoyi.system.domain.crm.CrmOpportunity;
 import org.ruoyi.system.domain.crm.bo.CrmFollowRecordBo;
 import org.ruoyi.system.domain.crm.vo.CrmFollowRecordVo;
+import org.ruoyi.system.mapper.crm.CrmContactMapper;
+import org.ruoyi.system.mapper.crm.CrmCustomerMapper;
 import org.ruoyi.system.mapper.crm.CrmFollowRecordMapper;
+import org.ruoyi.system.mapper.crm.CrmOpportunityMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * CRM 跟进记录服务
@@ -17,8 +25,16 @@ import java.util.Map;
 @Service
 public class CrmFollowRecordService extends CrmCrudService<CrmFollowRecord, CrmFollowRecordVo, CrmFollowRecordBo> {
 
-    public CrmFollowRecordService(CrmFollowRecordMapper followRecordMapper) {
+    private final CrmCustomerMapper customerMapper;
+    private final CrmContactMapper contactMapper;
+    private final CrmOpportunityMapper opportunityMapper;
+
+    public CrmFollowRecordService(CrmFollowRecordMapper followRecordMapper, CrmCustomerMapper customerMapper,
+                                  CrmContactMapper contactMapper, CrmOpportunityMapper opportunityMapper) {
         super(followRecordMapper);
+        this.customerMapper = customerMapper;
+        this.contactMapper = contactMapper;
+        this.opportunityMapper = opportunityMapper;
     }
 
     @Override
@@ -38,5 +54,30 @@ public class CrmFollowRecordService extends CrmCrudService<CrmFollowRecord, CrmF
     @Override
     protected Class<CrmFollowRecord> getEntityClass() {
         return CrmFollowRecord.class;
+    }
+
+    @Override
+    protected void fillDisplayFields(List<CrmFollowRecordVo> records) {
+        Set<Long> customerIds = CrmDisplayFields.ids(records, CrmFollowRecordVo::getCustomerId);
+        Set<Long> contactIds = CrmDisplayFields.ids(records, CrmFollowRecordVo::getContactId);
+        Set<Long> opportunityIds = CrmDisplayFields.ids(records, CrmFollowRecordVo::getOpportunityId);
+        Map<Long, CrmCustomer> customers = CrmDisplayFields.customerMap(customerMapper, customerIds);
+        Map<Long, CrmContact> contacts = CrmDisplayFields.contactMap(contactMapper, contactIds);
+        Map<Long, CrmOpportunity> opportunities = CrmDisplayFields.opportunityMap(opportunityMapper, opportunityIds);
+        records.forEach(record -> {
+            CrmCustomer customer = customers.get(record.getCustomerId());
+            if (customer != null) {
+                record.setCustomerCode(customer.getCode());
+                record.setCustomerName(customer.getName());
+            }
+            CrmContact contact = contacts.get(record.getContactId());
+            if (contact != null) {
+                record.setContactName(contact.getName());
+            }
+            CrmOpportunity opportunity = opportunities.get(record.getOpportunityId());
+            if (opportunity != null) {
+                record.setOpportunityName(opportunity.getName());
+            }
+        });
     }
 }

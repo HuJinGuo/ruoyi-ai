@@ -38,8 +38,12 @@ const providerOptions = ref<Array<{ label: string; value: number | string }>>(
   [],
 );
 const providersMap = ref<Map<number | string, any>>(new Map());
+type CategoryOption = { cssClass?: string; label: string; value: number | string };
 const categoryOptions = computed(() => {
-  const options = getDictOptions(DictEnum.CHAT_MODEL_CATEGORY);
+  const options: CategoryOption[] = getDictOptions(DictEnum.CHAT_MODEL_CATEGORY).map((option) => ({
+    ...option,
+    label: String(option.label),
+  }));
   // 注入 rerank（如果字典没有）
   if (!options.some((opt) => opt.value === 'rerank')) {
     options.push({ label: '重排模型', value: 'rerank', cssClass: 'magenta' });
@@ -47,7 +51,7 @@ const categoryOptions = computed(() => {
 
   // 联动逻辑：仅支持重排的厂商显示重排选项
   const supportedRerankProviders = ['alibailian', 'qianwen', 'siliconflow'];
-  const currentProvider = formData.value.providerCode?.toLowerCase();
+  const currentProvider = String(formData.value.providerCode ?? '').toLowerCase();
   if (currentProvider && !supportedRerankProviders.includes(currentProvider)) {
     return options.filter((opt) => opt.value !== 'rerank');
   }
@@ -67,7 +71,7 @@ async function loadProviders() {
   try {
     const res = await providerList({ pageNum: 1, pageSize: 999 });
     providerOptions.value = res.rows.map((item) => ({
-      label: item.providerName,
+      label: item.providerName ?? '',
       value: item.providerCode,
     }));
     // 存储供应商完整信息，以便后续查询apiHost
@@ -124,7 +128,7 @@ watch(
     if (newProviderCode) {
       const supportedRerankProviders = ['alibailian', 'qianwen', 'siliconflow'];
       if (
-        !supportedRerankProviders.includes(newProviderCode.toLowerCase()) &&
+        !supportedRerankProviders.includes(String(newProviderCode).toLowerCase()) &&
         formData.value.category === 'rerank'
       ) {
         formData.value.category = undefined;

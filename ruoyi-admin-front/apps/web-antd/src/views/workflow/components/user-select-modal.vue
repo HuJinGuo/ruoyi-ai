@@ -4,6 +4,7 @@ import type { VbenFormProps } from '@vben/common-ui';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { User } from '#/api';
+import type { Component } from 'vue';
 
 import { ref } from 'vue';
 
@@ -17,6 +18,20 @@ defineOptions({
   name: 'UserSelectModal',
   inheritAttrs: false,
 });
+
+type UserSelectGridApi = {
+  formApi: any;
+  grid: any;
+  reload: (...args: any[]) => Promise<void> | void;
+};
+
+type UserSelectGridFactory = (options: {
+  formOptions?: VbenFormProps;
+  gridEvents?: Record<string, (...args: any[]) => void>;
+  gridOptions: VxeGridProps;
+}) => [Component, UserSelectGridApi];
+
+const createUserSelectGrid = useVbenVxeGrid as unknown as UserSelectGridFactory;
 
 const props = withDefaults(
   defineProps<{ allowUserIds?: string; mode?: 'multiple' | 'single' }>(),
@@ -166,7 +181,7 @@ const gridOptions: VxeGridProps = {
   showOverflow: false,
 };
 
-const [BasicTable, tableApi] = useVbenVxeGrid({
+const [BasicTable, tableApi] = createUserSelectGrid({
   formOptions,
   gridOptions,
   gridEvents: {
@@ -237,7 +252,7 @@ const rightGridOptions: VxeGridProps = {
   showOverflow: false,
 };
 
-const [RightBasicTable, rightTableApi] = useVbenVxeGrid({
+const [RightBasicTable, rightTableApi] = createUserSelectGrid({
   gridOptions: rightGridOptions,
 });
 
@@ -248,7 +263,7 @@ async function handleRemoveItem(row: any) {
   if (props.mode === 'single') {
     await tableApi.grid.clearRadioRow();
   }
-  const data = rightTableApi.grid.getData();
+  const data = rightTableApi.grid.getData() as User[];
   await rightTableApi.grid.loadData(data.filter((item) => item !== row));
   // 这个方法有问题
   // await rightTableApi.grid.remove(row);

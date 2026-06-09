@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
 
-import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { VxeGridListeners, VxeGridProps } from '#/adapter/vxe-table';
 import type { LoginLog } from '#/api/monitor/logininfo/model';
+
+type GridEvents = Partial<VxeGridListeners>;
 
 import { ref } from 'vue';
 
@@ -79,7 +81,7 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
   formOptions,
   gridOptions,
   gridEvents: {
-    checkboxChange: (e) => {
+    checkboxChange: (e: Parameters<NonNullable<GridEvents['checkboxChange']>>[0]) => {
       const records = e.$grid?.getCheckboxRecords?.() ?? [];
       canUnlock.value = records.length === 1 && records[0]!.status === '1';
     },

@@ -1,5 +1,6 @@
 package org.ruoyi.system.domain.wms;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -20,17 +21,38 @@ public class WmsReceiptOrder extends TenantEntity {
 
     private Long purchaseOrderId;
 
+    @TableField(exist = false)
+    private String purchaseOrderCode;
+
     private Long supplierId;
+
+    @TableField(exist = false)
+    private String supplierCode;
+
+    @TableField(exist = false)
+    private String supplierName;
 
     private Long workOrderId;
 
+    @TableField(exist = false)
+    private String workOrderCode;
+
+    @TableField(exist = false)
+    private String projectName;
+
     private Long contractId;
+
+    @TableField(exist = false)
+    private String contractName;
 
     private String receiptStatus;
 
     private Date receiptTime;
 
     private Long warehouseUserId;
+
+    @TableField(exist = false)
+    private String warehouseUserName;
 
     private String remark;
 

@@ -87,6 +87,11 @@ export interface InfoVO {
   hybridAlpha: number;
 
   /**
+   * 相似度阈值（0-1）
+   */
+  similarityThreshold: number;
+
+  /**
    * 备注
    */
   remark: string;
@@ -177,6 +182,11 @@ export interface InfoForm extends BaseEntity {
    * 混合检索权重比例 (0.0-1.0)
    */
   hybridAlpha?: number;
+
+  /**
+   * 相似度阈值（0-1）
+   */
+  similarityThreshold?: number;
 
   /**
    * 备注

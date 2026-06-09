@@ -7,6 +7,8 @@
 import type { RuleObject } from 'ant-design-vue/es/form';
 import { computed, ref } from 'vue';
 
+import type { SelectProps } from 'ant-design-vue';
+
 import { Input, Textarea, Select, Form, FormItem } from 'ant-design-vue';
 import { ImageUpload } from '#/components/upload';
 import { pick } from 'lodash-es';
@@ -19,9 +21,11 @@ import { providerAdd, providerInfo, providerUpdate } from '#/api/chat/provider';
 import { ossInfo } from '#/api/system/oss';
 import type { ProviderForm } from '#/api/chat/provider/model';
 
-import { providerOptions } from './options';
+import { providerOptions as presetProviderOptions } from './options';
 
 const emit = defineEmits<{ reload: [] }>();
+
+const providerSelectOptions: SelectProps['options'] = [...presetProviderOptions];
 
 const isUpdate = ref(false);
 const title = computed(() => {
@@ -117,8 +121,9 @@ async function handleConfirm() {
       if (!data.providerIcon.startsWith('http')) {
         try {
           const ossFileList = await ossInfo(data.providerIcon);
-          if (ossFileList && ossFileList.length > 0) {
-            data.providerIcon = ossFileList[0].url;
+          const [ossFile] = ossFileList ?? [];
+          if (ossFile) {
+            data.providerIcon = ossFile.url;
           }
         } catch {
           // 失败时保持原值
@@ -152,7 +157,7 @@ async function handleCancel() {
       <FormItem label="厂商编码" v-bind="validateInfos.providerCode">
         <Select
           v-model:value="formData.providerCode"
-          :options="providerOptions"
+          :options="providerSelectOptions"
           :placeholder="$t('ui.formRules.required')"
           allow-clear
           show-search
@@ -189,4 +194,3 @@ async function handleCancel() {
     </Form>
   </BasicModal>
 </template>
-

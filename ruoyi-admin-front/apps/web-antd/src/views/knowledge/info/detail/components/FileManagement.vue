@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import type { AttachVO } from '#/api/knowledge/attach/model';
+import type { FragmentVO } from '#/api/knowledge/fragment/model';
+import type { BadgeProps } from 'ant-design-vue';
+
+import { ref, watch } from 'vue';
 import {
   Button,
   Upload,
@@ -15,8 +19,6 @@ import {
   Spin,
   Badge,
   Switch,
-  Typography,
-  TypographyParagraph,
   Drawer,
 } from 'ant-design-vue';
 import { InboxOutlined, CopyOutlined } from '@ant-design/icons-vue';
@@ -33,27 +35,20 @@ const props = defineProps<{
   knowledgeId?: string | number;
 }>();
 
+type FragmentRow = FragmentVO & { _expanded?: boolean };
+type AttachStatus = 0 | 1 | 2 | 3;
+
 const { apiURL, clientId } = useAppConfig(
   import.meta.env,
   import.meta.env.PROD,
 );
 const accessStore = useAccessStore();
 
-const attachmentData = ref([]);
-const uploadUrl = `${apiURL}/system/attach/upload`;
+const attachmentData = ref<AttachVO[]>([]);
 const loading = ref(false);
 const uploading = ref(false);
-const headers = {
-  Authorization: `Bearer ${accessStore.accessToken}`,
-  clientId,
-};
 
 const autoParse = ref(true);
-
-const uploadPayload = computed(() => ({
-  knowledgeId: props.knowledgeId,
-  autoParse: autoParse.value,
-}));
 
 const columns = [
   { title: '附件名称', dataIndex: 'name', key: 'name' },
@@ -64,7 +59,7 @@ const columns = [
   { title: '操作', key: 'action', width: 280 },
 ];
 
-const statusMap = {
+const statusMap: Record<AttachStatus, { status: BadgeProps['status']; text: string }> = {
   0: { text: '待解析', status: 'default' },
   1: { text: '解析中', status: 'processing' },
   2: { text: '已解析', status: 'success' },
@@ -73,7 +68,7 @@ const statusMap = {
 
 const fragmentVisible = ref(false);
 const fragmentLoading = ref(false);
-const fragmentData = ref([]);
+const fragmentData = ref<FragmentRow[]>([]);
 const fragmentColumns = [
   { title: '序号', dataIndex: 'idx', key: 'idx', width: 80 },
   { title: '片段内容', dataIndex: 'content', key: 'content' },
@@ -201,17 +196,12 @@ async function handleFragment(record: any) {
   try {
     const res = await fragmentList({ docId: record.docId, pageSize: 100 });
     // 初始化展开状态
-    fragmentData.value = (res.rows || []).map((item: any) => ({ ...item, _expanded: false }));
+    fragmentData.value = (res.rows || []).map((item) => ({ ...item, _expanded: false }));
   } catch (error) {
     message.error('加载片段失败');
   } finally {
     fragmentLoading.value = false;
   }
-}
-
-function closeFragment() {
-  fragmentVisible.value = false;
-  fragmentData.value = [];
 }
 
 async function handleViewFile(record: any) {
@@ -278,9 +268,9 @@ function isImageFile(fileSuffix: string) {
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <Tooltip v-if="record.status === 3 && record.remark" :title="record.remark">
-               <Badge v-bind="statusMap[record.status]" style="cursor: help" />
+               <Badge v-bind="statusMap[record.status as AttachStatus]" style="cursor: help" />
             </Tooltip>
-            <Badge v-else-if="statusMap[record.status]" v-bind="statusMap[record.status]" />
+            <Badge v-else-if="statusMap[record.status as AttachStatus]" v-bind="statusMap[record.status as AttachStatus]" />
             <span v-else>未知</span>
           </template>
           <template v-else-if="column.key === 'createTime'">

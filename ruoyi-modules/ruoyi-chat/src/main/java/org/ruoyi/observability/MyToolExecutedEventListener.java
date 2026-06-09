@@ -5,7 +5,10 @@ import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import dev.langchain4j.observability.api.listener.ToolExecutedEventListener;
 import lombok.extern.slf4j.Slf4j;
+import org.ruoyi.common.sse.utils.SseMessageUtils;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,5 +37,39 @@ public class MyToolExecutedEventListener implements ToolExecutedEventListener {
         log.info("【工具已执行】工具名称: {}", request.name());
         log.info("【工具已执行】工具参数: {}", request.arguments());
         log.info("【工具已执行】工具执行结果: {}", resultText);
+        pushToolTrace(request, resultText);
+    }
+
+    private void pushToolTrace(ToolExecutionRequest request, String resultText) {
+        AgentTraceContext.TraceTarget target = AgentTraceContext.get();
+        if (target == null || target.userId() == null) {
+            return;
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (target.runId() != null) {
+            payload.put("runId", target.runId());
+        }
+        payload.put("stepId", "tool:" + request.id());
+        payload.put("id", request.id());
+        payload.put("name", request.name());
+        payload.put("type", "TOOL");
+        payload.put("status", "success");
+        payload.put("timestamp", System.currentTimeMillis());
+        payload.put("input", request.arguments());
+        payload.put("result", truncate(resultText, 1200));
+
+        if (target.emitter() != null) {
+            SseMessageUtils.sendAgentEvent(target.emitter(), "agent_tool_done", payload);
+        } else {
+            SseMessageUtils.sendAgentEvent(target.userId(), "agent_tool_done", payload);
+        }
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength) + "...";
     }
 }

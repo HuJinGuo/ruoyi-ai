@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { Button, Collapse, Input, Select, Space, message } from 'ant-design-vue'
+import { Button, Collapse, Input, Select, Space } from 'ant-design-vue'
 import type { SelectValue } from 'ant-design-vue/es/select'
 import type { WorkflowInfo, WorkflowNode, UIWorkflow } from '../types/index.d'
 import { createNewEdge, deleteEdgesBySourceHandle, updateEdgeBySourceHandle } from '../utils/workflow-util'
@@ -211,43 +211,6 @@ function onSourceNodeChange(condition: Condition, nodeUuid: SelectValue) {
   condition.node_param_name = params[0]?.value || ''
 }
 
-// 验证条件是否有效
-function validateCondition(condition: Condition): { valid: boolean; message?: string } {
-  if (!condition.node_uuid) {
-    return { valid: false, message: '请选择源节点' }
-  }
-  if (!condition.node_param_name) {
-    return { valid: false, message: '请选择参数' }
-  }
-  if (!condition.operator) {
-    return { valid: false, message: '请选择运算符' }
-  }
-  // 对于非 empty/not_empty 运算符，value 不能为空
-  if (!['empty', 'not empty'].includes(condition.operator) && !condition.value) {
-    return { valid: false, message: '请输入比较值' }
-  }
-  return { valid: true }
-}
-
-// 验证分支是否有效
-function validateCase(caseItem: Case, index: number): { valid: boolean; message?: string } {
-  if (!caseItem.target_node_uuid) {
-    return { valid: false, message: `分支 ${index + 1} 的目标节点不能为空` }
-  }
-  if (!caseItem.conditions || caseItem.conditions.length === 0) {
-    return { valid: false, message: `分支 ${index + 1} 至少需要一个条件` }
-  }
-  for (let i = 0; i < caseItem.conditions.length; i++) {
-    const condition = caseItem.conditions[i]
-    if (!condition) continue
-    const result = validateCondition(condition)
-    if (!result.valid) {
-      return { valid: false, message: `分支 ${index + 1} 的条件 ${i + 1}: ${result.message}` }
-    }
-  }
-  return { valid: true }
-}
-
 // 检查是否有无效配置
 function hasInvalidConfig(caseItem: Case): boolean {
   return !caseItem.target_node_uuid || 
@@ -258,33 +221,6 @@ function hasInvalidConfig(caseItem: Case): boolean {
          )
 }
 
-// 验证所有配置（用于保存前验证）
-function validateAllConfig(): boolean {
-  // 检查是否有分支
-  if (nodeConfig.cases.length === 0) {
-    message.warning('请至少添加一个条件分支')
-    return false
-  }
-  
-  // 验证每个分支
-  for (let i = 0; i < nodeConfig.cases.length; i++) {
-    const caseItem = nodeConfig.cases[i]
-    if (!caseItem) continue
-    const result = validateCase(caseItem, i)
-    if (!result.valid) {
-      message.warning(result.message || '配置无效')
-      return false
-    }
-  }
-  
-  // 验证默认分支
-  if (!nodeConfig.default_target_node_uuid) {
-    message.warning('请为默认分支选择目标节点')
-    return false
-  }
-  
-  return true
-}
 </script>
 
 <template>
